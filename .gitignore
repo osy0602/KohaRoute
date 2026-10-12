@@ -1,1 +1,58 @@
+# ============================================================
+# KohaRoute .gitignore
+# Files listed here are never tracked by Git.
+# ============================================================
+
+# ---------- Secrets (NEVER commit) ----------
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---------- Python / backend ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local databases (each person makes their own with seed.py)
+*.db
+*.sqlite
+*.sqlite3
+
+# Output of scratch scripts (e.g. ors_test.py)
+route_map.html
+
+# ---------- Node / frontend ----------
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+
+# ---------- Editors ----------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+
+# ---------- Operating systems ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Logs ----------
+*.log

@@ -6,7 +6,7 @@ Setup (once):
         ORS_API_KEY=your-key
     (add .env to .gitignore so the key is never committed)
 Run:
-    Press the VS Code Run button (or: python ors_test.py)
+    Press the VS Code Run button (or: python test.py)
     -> prints distance/duration, writes route_map.html next to this script
 """
 import os
@@ -14,7 +14,7 @@ from pathlib import Path
 import requests
 import folium
 
-HERE = Path(__file__).resolve().parent
+HERE = Path(__file__).resolve().parent.parent
 
 
 def load_key():
@@ -63,22 +63,6 @@ m = folium.Map(location=[points[0][1], points[0][0]], zoom_start=13)
 folium.PolyLine([[lat, lon] for lon, lat in line], weight=5).add_to(m)
 for i, (lon, lat) in enumerate(points):
     folium.Marker([lat, lon], tooltip=f"stop {i}").add_to(m)
-m.save(HERE / "route_map.html")
-print(f"saved {HERE / 'route_map.html'} (open it in a browser)")
+m.save(HERE / "backend/route_map.html")
+print(f"saved {HERE / 'backend/route_map.html'} (open it in a browser)")
 
-# Open the same stop order in Google Maps (no API key needed).
-# Google recalculates the road route itself; we only pass our stop order.
-# Limit: about 9 waypoints between origin and destination (fewer on some mobile browsers).
-from urllib.parse import urlencode
-
-def google_maps_url(stops):
-    as_text = [f"{lat},{lon}" for lon, lat in stops]  # Google wants "lat,lon"
-    params = {"api": 1, "origin": as_text[0], "destination": as_text[-1], "travelmode": "driving"}
-    if len(as_text) > 2:
-        params["waypoints"] = "|".join(as_text[1:-1])
-    return "https://www.google.com/maps/dir/?" + urlencode(params)
-
-gmaps = google_maps_url(points)
-print("Google Maps:", gmaps)
-import webbrowser
-webbrowser.open(gmaps)
