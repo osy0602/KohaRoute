@@ -2,8 +2,8 @@
 
 Waste & recycling pickup route planner for councils and community groups.
 
-- **Backend:** Python
-- **Frontend:** React
+- **Backend:** Python (`backend/`)
+- **Frontend:** React (`frontend/`)
 
 This README explains how to get the code, set up your own branch, and send your work to `main` with a Pull Request. Follow it in order the first time.
 
@@ -17,7 +17,7 @@ koharoute/
 └── frontend/    ← React code
 ```
 
-Backend work goes in `backend/`, frontend work goes in `frontend/`. Nothing else at the top level without asking sy first.
+Backend work goes in `backend/`, frontend work goes in `frontend/`. Nothing else at the top level.
 
 > You need **Git** installed and a **GitHub account**, and you must have **accepted the invitation** to this repo (check your email for "invited you to collaborate").
 > Run every command below in a terminal. In VS Code: **Terminal → New Terminal**. Windows users can also use PowerShell; Mac users can use the Terminal app.
@@ -59,12 +59,12 @@ Tip: in VS Code you can also do **File → Open Folder**, pick the folder, then 
 1. Open the repo page on GitHub.
 2. Click the green **Code** button.
 3. Make sure **HTTPS** is selected and click the copy icon. It looks like:
-   `https://github.com/osy0602/KohaRoute.git`
+   `https://github.com/osy0602/KohaRoute`
 
 ### 1.3 Clone
 
 ```bash
-git clone https://github.com/osy0602/KohaRoute.git
+git clone https://github.com/osy0602/KohaRoute
 ```
 
 This creates a new folder called `koharoute` with all the code inside. Move into it and open it in VS Code:
@@ -86,39 +86,40 @@ You should see `On branch main`.
 
 ---
 
-## 2. Create your own branch
+## 2. Switch to your own branch
 
 Every team member has **one personal branch** for the whole project. You do all your work there.
 
-### 2.1 Branch name rule
+**Your branch already exists.** I created one for each member on GitHub, so you don't create anything; you just switch to it.
+
+### 2.1 Branch names
 
 ```
-koharoute_<yourname>
+koharoute_chaw
+koharoute_daniel
+koharoute_keen
+koharoute_seyoung
 ```
 
-- Your first name, **lowercase**, in English letters.
-- Use `_` (underscore) between `koharoute` and your name.
-- Examples: `koharoute_seyoung`, `koharoute_chaw`, `koharoute_keen`, `koharoute_daniel`
+ You can also see all branches on the GitHub repo page: click the **main** dropdown button above the file list.
 
-### 2.2 Create it (once)
-
-Make sure you are on the latest `main` first, then create your branch and upload it to GitHub:
+### 2.2 Switch to it (once, right after cloning)
 
 ```bash
-git switch main
-git pull
-git switch -c koharoute_seyoung
-git push -u origin koharoute_seyoung
+git fetch origin
+git switch koharoute_<yourname>
 ```
 
 | Command | What it does |
 |---|---|
-| `git switch main` | Go to the `main` branch |
-| `git pull` | Download the newest `main` from GitHub |
-| `git switch -c koharoute_seyoung` | **C**reate your branch and move onto it |
-| `git push -u origin koharoute_seyoung` | Upload your branch to GitHub (the `-u` is only needed this first time) |
+| `git fetch origin` | Download the latest list of branches from GitHub |
+| `git switch koharoute_<yourname>` | Move onto your branch. The first time, Git makes a local copy of it linked to the one on GitHub, so later `git push` and `git pull` just work |
 
-**VS Code alternative:** click the branch name in the **bottom-left corner** → **+ Create new branch...** → type `koharoute_seyoung` → Enter. Then click **Publish Branch** in the Source Control panel.
+You should see: `branch 'koharoute_seyoung' set up to track 'origin/koharoute_seyoung'`.
+
+**VS Code alternative:** click the branch name in the **bottom-left corner** → pick **origin/koharoute_seyoung** from the list. VS Code switches you onto your branch.
+
+> Got `invalid reference` or `did not match any file(s) known to git`? Check the spelling (all lowercase, `_` not `-`) and run `git fetch origin` again. Still nothing? Ask Seyoung to check the branch exists.
 
 ### 2.3 Check which branch you're on
 
@@ -154,7 +155,7 @@ The branch with `*` next to it is the one you're on. **Before you start coding, 
 ```
 main                ──●──────────────●───────────●──►  finished, reviewed work only
                        \            ↑ PR        ↑ PR
-koharoute_seyoung       ●──●──●──●──┘           │       your daily work
+koharoute_seyoung       ●──●──●──●──┘           │       seyoung's daily work
 koharoute_keen           ●──●──●──●──●──●───────┘       keen's daily work
 ```
 
@@ -162,7 +163,7 @@ koharoute_keen           ●──●──●──●──●──●──�
 
 ```bash
 # 1. Make sure you're on your branch
-git switch koharoute_yourbranch
+git switch koharoute_<your_name>
 
 # 2. Bring in everything that was merged into main since last time
 git fetch origin
@@ -206,7 +207,7 @@ When one piece of work is **finished and working**, for example one user story (
 1. **Sync and push your branch** first:
 
    ```bash
-   git switch koharoute_yourname
+   git switch koharoute_seyoung
    git fetch origin
    git merge origin/main
    git push
@@ -277,3 +278,5 @@ General rules for every file and folder:
 Names inside the code follow the same idea: Python variables and functions in `snake_case` (`total_distance_km`), React components in `PascalCase` (`StopCard`), JavaScript variables and functions in `camelCase` (`totalDistanceKm`).
 
 Never commit these (the `.gitignore` already blocks them): `.env`, `node_modules/`, `.venv/`, `__pycache__/`, `*.db`.
+
+---
