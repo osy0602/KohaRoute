@@ -2,10 +2,10 @@
 
 Waste & recycling pickup route planner for councils and community groups.
 
-- **Backend:** Python (`backend/`)
-- **Frontend:** React (`frontend/`)
+- **Backend:** Python + FastAPI (`backend/`)
+- **Frontend:** React + react-leaflet (`frontend/`)
 
-This README explains how to get the code, set up your own branch, and send your work to `main` with a Pull Request. Follow it in order the first time.
+This README explains how to get the code, make a branch for each user story, and send your work to `main` with a Pull Request. Follow it in order the first time.
 
 ## Folder structure
 
@@ -17,7 +17,7 @@ koharoute/
 └── frontend/    ← React code
 ```
 
-Backend work goes in `backend/`, frontend work goes in `frontend/`. Nothing else at the top level.
+Backend work goes in `backend/`, frontend work goes in `frontend/`. Nothing else at the top level without asking sy first.
 
 > You need **Git** installed and a **GitHub account**, and you must have **accepted the invitation** to this repo (check your email for "invited you to collaborate").
 > Run every command below in a terminal. In VS Code: **Terminal → New Terminal**. Windows users can also use PowerShell; Mac users can use the Terminal app.
@@ -59,18 +59,18 @@ Tip: in VS Code you can also do **File → Open Folder**, pick the folder, then 
 1. Open the repo page on GitHub.
 2. Click the green **Code** button.
 3. Make sure **HTTPS** is selected and click the copy icon. It looks like:
-   `https://github.com/osy0602/KohaRoute`
+   `https://github.com/osy0602/KohaRoute.git`
 
 ### 1.3 Clone
 
 ```bash
-git clone https://github.com/osy0602/KohaRoute
+git clone https://github.com/osy0602/KohaRoute.git
 ```
 
-This creates a new folder called `koharoute` with all the code inside. Move into it and open it in VS Code:
+This creates a new folder called `KohaRoute` with all the code inside. Move into it and open it in VS Code:
 
 ```bash
-cd koharoute
+cd KohaRoute
 code .
 ```
 
@@ -86,40 +86,45 @@ You should see `On branch main`.
 
 ---
 
-## 2. Switch to your own branch
+## 2. One branch per user story
 
-Every team member has **one personal branch** for the whole project. You do all your work there.
-
-**Your branch already exists.** I created one for each member on GitHub, so you don't create anything; you just switch to it.
+Every **user story gets its own branch**. You make it from the latest `main` when you start the story, open a PR when it's done, and the branch is deleted after it's merged. Then you start a new branch for your next story.
 
 ### 2.1 Branch names
 
 ```
-koharoute_chaw
-koharoute_daniel
-koharoute_keen
-koharoute_seyoung
+us-<number>-<short-name>
 ```
 
- You can also see all branches on the GitHub repo page: click the **main** dropdown button above the file list.
+Story number with two digits, then a few words from the story title, all lowercase, words joined with `-`. Examples:
 
-### 2.2 Switch to it (once, right after cloning)
+| Story | Branch |
+|---|---|
+| US-04 Approve or reject bookings | `us-04-approve-bookings` |
+| US-05 Manage vehicle records | `us-05-vehicle-records` |
+| US-07 Build and optimise routes | `us-07-build-routes` |
+
+A small fix that isn't a story: `fix-<short-name>`, e.g. `fix-login-error-message`.
+
+### 2.2 Start a story (make the branch)
 
 ```bash
-git fetch origin
-git switch koharoute_<yourname>
+git switch main
+git pull
+git switch -c us-04-approve-bookings
+git push -u origin us-04-approve-bookings
 ```
 
 | Command | What it does |
 |---|---|
-| `git fetch origin` | Download the latest list of branches from GitHub |
-| `git switch koharoute_<yourname>` | Move onto your branch. The first time, Git makes a local copy of it linked to the one on GitHub, so later `git push` and `git pull` just work |
+| `git switch main` | Move onto `main` |
+| `git pull` | Get everything that was merged into `main` so far |
+| `git switch -c us-04-approve-bookings` | Create the new story branch from `main` and move onto it |
+| `git push -u origin us-04-approve-bookings` | Put the branch on GitHub and link it, so later `git push` and `git pull` just work |
 
-You should see: `branch 'koharoute_seyoung' set up to track 'origin/koharoute_seyoung'`.
+Always start a new branch **from an up-to-date `main`**, never from another story branch.
 
-**VS Code alternative:** click the branch name in the **bottom-left corner** → pick **origin/koharoute_seyoung** from the list. VS Code switches you onto your branch.
-
-> Got `invalid reference` or `did not match any file(s) known to git`? Check the spelling (all lowercase, `_` not `-`) and run `git fetch origin` again. Still nothing? Ask Seyoung to check the branch exists.
+**VS Code alternative:** click the branch name in the **bottom-left corner** → pick **main** → click it again → **Create new branch...** → type the name.
 
 ### 2.3 Check which branch you're on
 
@@ -129,18 +134,19 @@ Look at the **bottom-left corner of VS Code**, or run:
 git branch
 ```
 
-The branch with `*` next to it is the one you're on. **Before you start coding, always check it says your branch, not `main`.**
+The branch with `*` next to it is the one you're on. **Before you start coding, always check it says your story branch, not `main`.**
 
 ---
 
-## 3. Your branch vs `main`
+## 3. Story branch vs `main`
 
-### Your branch (`koharoute_<yourname>`)
+### Story branch (`us-<number>-<short-name>`)
 
-- **Your own workspace.** Only you commit and push here.
+- **The workspace for one user story.** The person who owns the story commits and pushes here.
 - Work in progress is fine: half-finished code, experiments, many small commits.
 - Nothing you do here affects anyone else.
-- You keep using the **same branch** for the whole project. Don't delete it.
+- Only that story's work goes here. Starting another story? Make a new branch (2.2).
+- Deleted after its PR is merged.
 
 ### `main`
 
@@ -153,17 +159,17 @@ The branch with `*` next to it is the one you're on. **Before you start coding, 
 - **Nobody pushes to `main` directly.** Work gets into `main` only through a **Pull Request** with 1 approval (Section 4).
 
 ```
-main                ──●──────────────●───────────●──►  finished, reviewed work only
-                       \            ↑ PR        ↑ PR
-koharoute_seyoung       ●──●──●──●──┘           │       seyoung's daily work
-koharoute_keen           ●──●──●──●──●──●───────┘       keen's daily work
+main                      ──●───────────────●──────────●──►  finished, reviewed work only
+                             \  \           ↑ PR       ↑ PR
+us-04-approve-bookings        ●──●──●──●────┘          │       one story
+us-12-driver-route               ●──●──●──●──●──●──────┘       another story
 ```
 
-### Daily routine on your branch
+### Daily routine on your story branch
 
 ```bash
-# 1. Make sure you're on your branch
-git switch koharoute_<your_name>
+# 1. Make sure you're on your story branch
+git switch us-04-approve-bookings
 
 # 2. Bring in everything that was merged into main since last time
 git fetch origin
@@ -173,7 +179,7 @@ git merge origin/main
 
 # 4. Save and upload
 git add .
-git commit -m "feat: show driver stops as cards"
+git commit -m "feat: approve and reject buttons on bookings list"
 git push
 ```
 
@@ -198,40 +204,38 @@ On our team, every PR needs **1 approval** from a teammate before it can be merg
 
 ### 4.2 When to open a PR
 
-When one piece of work is **finished and working**, for example one user story (like "R2 driver stop cards") or one bug fix. Keep PRs small; a small PR is quick to review.
-
-> While your PR is open, **anything else you push to your branch is added to that same PR.** So wait until it's merged before pushing your next feature, or ask your reviewer to be quick.
+When the user story on that branch is **finished and working** (its acceptance criteria pass). One story = one branch = one PR.
 
 ### 4.3 How to open a PR, step by step
 
 1. **Sync and push your branch** first:
 
    ```bash
-   git switch koharoute_seyoung
+   git switch us-04-approve-bookings
    git fetch origin
    git merge origin/main
    git push
    ```
 
 2. Go to the repo on **github.com**.
-3. You'll usually see a yellow bar: **"koharoute_seyoung had recent pushes" → Compare & pull request**. Click it.
+3. You'll usually see a yellow bar: **"us-04-approve-bookings had recent pushes" → Compare & pull request**. Click it.
    No yellow bar? Click the **Pull requests** tab → **New pull request**.
 4. Check the two boxes at the top:
    - **base: `main`** ← where the work goes
-   - **compare: `koharoute_seyoung`** ← your branch
-5. **Title:** short description plus the story ID, e.g. `feat: driver stop cards (R2)`
+   - **compare: `us-04-approve-bookings`** ← your story branch
+5. **Title:** story ID plus short description, e.g. `US-04: approve or reject bookings`
 6. **Description:** fill in:
 
    ```markdown
    ## What
-   Driver page shows today's stops as cards, next stop highlighted.
+   Admin can approve or reject pending bookings; rejecting needs a reason.
 
    ## Story
-   R2
+   US-04
 
    ## How to test
    1. Run backend and frontend
-   2. Log in as a driver, open /driver, check the stops are in order
+   2. Log in as admin, open Bookings, approve one and reject one with a reason
 
    ## Screenshot
    (drag an image here for frontend changes)
@@ -243,10 +247,18 @@ When one piece of work is **finished and working**, for example one user story (
 ### 4.4 After you open it
 
 - The reviewer reads the **Files changed** tab and either **Approves** or **Requests changes**.
-- If changes are requested: fix them **on your branch**, then `git add .`, `git commit -m "..."`, `git push`. The PR updates automatically.
+- If changes are requested: fix them **on the same story branch**, then `git add .`, `git commit -m "..."`, `git push`. The PR updates automatically.
 - Once it has **1 approval** and GitHub shows no conflicts, click **Merge pull request → Confirm merge**.
-- **Don't click "Delete branch".** You keep using your branch.
-- Tell the team in the chat that it's merged, so everyone runs `git fetch origin` + `git merge origin/main` on their branch.
+- Click **Delete branch** after merging. The story is done.
+- Clean up on your computer and get the new `main`:
+
+  ```bash
+  git switch main
+  git pull
+  git branch -d us-04-approve-bookings
+  ```
+
+- Tell the team in the chat that it's merged, so everyone runs `git fetch origin` + `git merge origin/main` on their own story branch.
 
 ### 4.5 Reviewing a teammate's PR
 
@@ -279,4 +291,3 @@ Names inside the code follow the same idea: Python variables and functions in `s
 
 Never commit these (the `.gitignore` already blocks them): `.env`, `node_modules/`, `.venv/`, `__pycache__/`, `*.db`.
 
----
