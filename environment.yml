@@ -1,0 +1,7 @@
+# Creates the conda environment used for the backend: conda env create -f environment.yml
+name: KOHA-ROUTE
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
