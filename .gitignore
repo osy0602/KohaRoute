@@ -1,58 +1,53 @@
-# ============================================================
-# KohaRoute .gitignore
-# Files listed here are never tracked by Git.
-# ============================================================
-
-# ---------- Secrets (NEVER commit) ----------
+# Secrets and local config
 .env
 .env.*
 !.env.example
-*.pem
-*.key
 
-# ---------- Python / backend ----------
-__pycache__/
-*.py[cod]
-*.egg-info/
+# Local data (SQLite in WAL mode also creates these side files)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+uploads/
+
+# Python environments, bytecode, build and test output
 .venv/
 venv/
 env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
 .pytest_cache/
+.ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
 .mypy_cache/
-.ruff_cache/
+build/
 
-# Local databases (each person makes their own with seed.py)
-*.db
-*.sqlite
-*.sqlite3
-
-# Output of scratch scripts (e.g. ors_test.py)
-route_map.html
-
-# ---------- Node / frontend ----------
+# Node and Vite
 node_modules/
 dist/
-build/
 .vite/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
 
-# ---------- Editors ----------
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea/
-*.swp
-
-# ---------- Operating systems ----------
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# ---------- Logs ----------
+# Logs and editor leftovers
 *.log
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Packaged deliverables
+*.zip
