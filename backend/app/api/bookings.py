@@ -17,6 +17,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi import Path as PathParam
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -28,11 +29,13 @@ from app.schemas.bookings import (
     AddressSuggestionResponse,
     BookingCreatedResponse,
     BookingOptionsResponse,
+    BookingTrackingResponse,
     CategoryOption,
     SizePresetOption,
 )
 from app.services.booking_rules import available_booking_dates
 from app.services.booking_service import BookingDetails, BookingValidationError, create_booking
+from app.services.booking_tracking_service import BookingNotFoundError, track_booking
 from app.services.geocoding_service import (
     AddressRateLimiter,
     AddressSearchService,
@@ -42,7 +45,6 @@ from app.services.photo_service import InvalidPhotoError, prepare_photo
 from app.services.settings_service import load_business_settings
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
-MAX_REFERENCE_ATTEMPTS = 5
 
 
 def get_address_search(request: Request) -> AddressSearchService:
@@ -53,6 +55,27 @@ def get_address_search(request: Request) -> AddressSearchService:
 def get_address_rate_limiter(request: Request) -> AddressRateLimiter:
     """Return the application's per-process address request limiter."""
     return request.app.state.address_rate_limiter
+
+
+@router.get("/track/{reference}", response_model=BookingTrackingResponse)
+def read_booking_tracking(
+    reference: Annotated[str, PathParam(min_length=1, max_length=24)],
+    db: Annotated[Session, Depends(get_db)],
+) -> BookingTrackingResponse:
+    """Look up status and pickup date without exposing donor contact or full address."""
+    try:
+        tracking = track_booking(db, reference)
+    except BookingNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No booking found"
+        ) from error
+    return BookingTrackingResponse(
+        status=tracking.status,
+        pickup_date=tracking.pickup_date,
+        address_area=tracking.address_area,
+        rejection_reason=tracking.rejection_reason,
+        missed_message=tracking.missed_message,
+    )
 
 
 @router.get("/options", response_model=BookingOptionsResponse)
