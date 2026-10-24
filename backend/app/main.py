@@ -3,13 +3,22 @@
 Run from the backend folder with: ``uvicorn app.main:app --reload``.
 """
 
+from contextlib import asynccontextmanager
+
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.auth import router as auth_router
+from app.api.bookings import router as bookings_router
 from app.api.health import router as health_router
 from app.config import get_config
+from app.services.geocoding_service import (
+    AddressRateLimiter,
+    AddressSearchService,
+    OrsAddressProvider,
+)
 
 
 def create_app() -> FastAPI:
@@ -22,7 +31,18 @@ def create_app() -> FastAPI:
         The configured application.
     """
     config = get_config()
-    application = FastAPI(title="KohaRoute API", version=__version__)
+
+    @asynccontextmanager
+    async def lifespan(application: FastAPI):
+        """Share one async HTTP connection pool for ORS lookups per app process."""
+        async with httpx.AsyncClient(timeout=httpx.Timeout(6.0, connect=3.0)) as client:
+            application.state.address_search = AddressSearchService(
+                OrsAddressProvider(client, config.ors_api_key)
+            )
+            application.state.address_rate_limiter = AddressRateLimiter()
+            yield
+
+    application = FastAPI(title="KohaRoute API", version=__version__, lifespan=lifespan)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(config.cors_origins),
@@ -31,6 +51,7 @@ def create_app() -> FastAPI:
     )
     application.include_router(health_router)
     application.include_router(auth_router)
+    application.include_router(bookings_router)
     return application
 
 

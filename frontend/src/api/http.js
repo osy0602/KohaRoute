@@ -6,14 +6,15 @@ import { clearToken, getToken } from "../auth/tokenStorage";
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, field = undefined) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.field = field;
   }
 }
 
-let onSessionExpired = () => {};
+let onSessionExpired = () => { };
 
 /** AuthProvider registers a function that clears the user when a 401 arrives. */
 export function setSessionExpiredHandler(handler) {
@@ -23,6 +24,7 @@ export function setSessionExpiredHandler(handler) {
 /** Pick a readable message out of FastAPI's error body. */
 function messageFromBody(body) {
   if (typeof body?.detail === "string") return body.detail;
+  if (typeof body?.detail?.message === "string") return body.detail.message;
   return "Check the form and try again.";
 }
 
@@ -35,7 +37,8 @@ function messageFromBody(body) {
 export async function apiRequest(path, { method = "GET", body } = {}) {
   const token = getToken();
   const headers = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  if (body !== undefined && !isFormData) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let response;
@@ -43,7 +46,7 @@ export async function apiRequest(path, { method = "GET", body } = {}) {
     response = await fetch(`${API_BASE}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(0, "Cannot reach the server. Check your connection and try again.");
@@ -56,7 +59,7 @@ export async function apiRequest(path, { method = "GET", body } = {}) {
       clearToken();
       onSessionExpired();
     }
-    throw new ApiError(response.status, messageFromBody(data));
+    throw new ApiError(response.status, messageFromBody(data), data?.detail?.field);
   }
   return data;
 }

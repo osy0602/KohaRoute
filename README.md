@@ -2,8 +2,8 @@
 
 Pickup booking and route planning for Auckland Community Centre. Team Koha.
 
-This is **Parts 0 and 1**: the foundation, then the data models, business settings and seed
-script. Features arrive one part at a time (Part 2 adds login).
+This repository currently includes Parts 0-3: the foundation, seeded data/settings, staff login,
+and donor pickup booking. Later features arrive one part at a time.
 
 ## Folder layout
 
@@ -13,7 +13,7 @@ koharoute/
   backend/
     app/                 FastAPI code
       models/            database tables (one file per table)
-      services/          business rules: settings reader, open-day calendar
+      services/          business rules, booking, photo and ORS adapters
       api/               HTTP routers
       seed.py            `python -m app.seed` (logic) and seed_data.py (the data itself)
       security.py        password hashing
@@ -21,7 +21,7 @@ koharoute/
     tests/               pytest tests
     requirements*.txt    packages
     pyproject.toml       Black, Ruff and pytest settings
-    .env.example         copy to .env to override defaults
+    .env.example         copy to .env for ORS key and local overrides
   frontend/
     src/api/             one small file per backend resource, plus a shared fetch wrapper
     src/hooks/           reusable React logic (no screen markup)
@@ -56,7 +56,7 @@ uvicorn app.main:app --reload        # http://localhost:8000/api/health and /doc
 npm run dev                          # http://localhost:5173
 ```
 
-The start page shows a "Setup check" with Backend, Database, today's NZ date and the version.
+The public start page is the donor pickup booking form. Staff use `/login`.
 
 ## Create the database and seed it
 
@@ -98,19 +98,36 @@ npm run format:check                 # use `npm run format` to fix
 ## Configuration
 
 Settings come from environment variables or `backend/.env` (see `.env.example`):
-`KOHA_ENV`, `DATABASE_URL` (default `backend/koharoute.db`) and `CORS_ORIGINS`.
+`KOHA_ENV`, `DATABASE_URL` (default `backend/koharoute.db`), `CORS_ORIGINS`, `ORS_API_KEY`,
+and `PHOTO_STORAGE_DIR`. Set a unique `JWT_SECRET_KEY` outside local development. Uploaded
+photos default to `backend/uploads/photos/` and are not served as public static files.
 Business rules such as opening days and size presets are stored in the database from Part 1,
 not in configuration.
 
+## Donor booking (Part 3)
+
+The public form loads open pickup dates, active categories, size presets, and upload limits from
+`GET /api/bookings/options`. Address autocomplete uses `GET /api/bookings/address-suggestions`
+and requires an `ORS_API_KEY`; selections are signed and expire after ten minutes. Submit a
+multipart form to `POST /api/bookings`. The backend revalidates all fields, calculates estimates,
+decodes and re-encodes JPG/PNG photos to remove metadata, and stores photos under random names.
+The confirmation contains a random reference; tracking arrives in Part 4. If address search is
+unavailable, configure a valid ORS key and retry.
+
 ## Where each coding standard is demonstrated
 
-| Standard | Examples in Part 0 |
+| Standard | Examples across the current parts |
 | --- | --- |
 | Modularity and encapsulation | `config.py` (settings only), `database.py` (all SQLite details), `timeutil.py` (the only place "today" is decided), `api/health.py` (one router per feature); `settings_service` is the only code that reads setting rows; `calendar_service` is pure functions with no database; frontend split into `api/`, `hooks/`, `pages/` |
 | Performance | One cached config read (`lru_cache`); one session per request, always closed; SQLite write-ahead logging; shared in-memory connection in tests; `AbortController` cancels stale requests; indexes on booking status, pickup date, reference and photo booking; `lazy="selectin"` avoids one query per booking; all settings read in one query; seed runs in one transaction |
 | Commenting and documentation | Google-style docstrings on every public function (enforced by Ruff rule set `D`); comments explain why (for example, why `date.today()` is banned); JSDoc on the frontend helpers; the seed data cites its source and date; this README |
 | Indentation and formatting | Black and Ruff (4 spaces, 100 columns) via `pyproject.toml`; Prettier (2 spaces, single quotes) via `.prettierrc.json`; `.editorconfig` for every editor |
 | Naming conventions | `snake_case` functions and files, `PascalCase` classes and React components, `UPPER_SNAKE_CASE` constants, `camelCase` JavaScript; names follow the spec vocabulary |
+
+Part 3 keeps booking rules, address search, photo processing, persistence, API schemas, and UI in
+separate modules. ORS uses one shared async HTTP client, bounded five-minute query caching, and
+per-client rate limiting. Booking validation and image preparation happen before persistence;
+failed database writes roll back and remove any already-written photo files.
 
 ## Data model (Part 1)
 
@@ -136,8 +153,8 @@ confirm Auckland Anniversary Day (26 Jan 2026 and 1 Feb 2027) with the client be
 
 ## Known limits
 
-- Login, bookings and routes are not built yet.
+- Tracking, Admin booking review, vehicles, route generation, driver workflow, and maps are not built yet.
 - The size presets, vehicle capacities, categories and depot coordinates are placeholders
-  awaiting client confirmation. The depot coordinates are approximate until Part 3 looks them up.
+  awaiting client confirmation. The depot coordinates are approximate pending a later ORS lookup.
 - There is no migration tool: the schema is created from the models. After a model change in
   development, run `python -m app.seed --reset`.
