@@ -2,8 +2,8 @@
 
 Pickup booking and route planning for Auckland Community Centre. Team Koha.
 
-This repository currently includes Parts 0-3: the foundation, seeded data/settings, staff login,
-and donor pickup booking. Later features arrive one part at a time.
+This repository currently includes Parts 0-4: the foundation, seeded data/settings, staff login,
+donor pickup booking, and public booking tracking. Later features arrive one part at a time.
 
 ## Folder layout
 
@@ -114,6 +114,14 @@ decodes and re-encodes JPG/PNG photos to remove metadata, and stores photos unde
 The confirmation contains a random reference; tracking arrives in Part 4. If address search is
 unavailable, configure a valid ORS key and retry.
 
+## Track a booking (Part 4)
+
+Donors can use `/track` or `GET /api/bookings/track/{reference}` to see the booking status and
+pickup date. The response includes only the pickup area, not the street address, donor name,
+contact number, or photo details. Rejected bookings include the Admin's reason; missed bookings
+show that the centre will contact the donor to reschedule. Unknown references return
+`No booking found`.
+
 ## Where each coding standard is demonstrated
 
 | Standard | Examples across the current parts |
@@ -153,7 +161,7 @@ confirm Auckland Anniversary Day (26 Jan 2026 and 1 Feb 2027) with the client be
 
 ## Known limits
 
-- Tracking, Admin booking review, vehicles, route generation, driver workflow, and maps are not built yet.
+- Admin booking review, vehicles, route generation, driver workflow, and maps are not built yet.
 - The size presets, vehicle capacities, categories and depot coordinates are placeholders
   awaiting client confirmation. The depot coordinates are approximate pending a later ORS lookup.
 - There is no migration tool: the schema is created from the models. After a model change in

@@ -4,6 +4,7 @@ import { CssBaseline } from "@mui/material";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import BookPickup from "./pages/BookPickup";
+import TrackBooking from "./pages/TrackBooking";
 import { staffRoutes } from "./routes/staffRoutes";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<Navigate to="/book" replace />} />
                 <Route path="/book" element={<BookPickup />} />
+                <Route path="/track" element={<TrackBooking />} />
                 {staffRoutes}
                 <Route path="*" element={<Navigate to="/book" replace />} />
             </Routes>

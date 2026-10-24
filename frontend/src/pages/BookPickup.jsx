@@ -214,8 +214,16 @@ export default function BookPickup() {
                 <Typography>Pickup date: {formatDate(confirmation.pickup_date)}</Typography>
                 <Typography>Status: Pending review</Typography>
                 <Typography color="text.secondary" sx={{ mt: 2 }}>
-                    Booking tracking will be available using this reference.
+                    Check the booking status and pickup date using this reference.
                 </Typography>
+                <Button
+                    component={RouterLink}
+                    to={`/track?reference=${encodeURIComponent(confirmation.reference)}`}
+                    variant="contained"
+                    sx={{ mt: 2 }}
+                >
+                    Track booking
+                </Button>
             </Container>
         );
     }
@@ -224,7 +232,10 @@ export default function BookPickup() {
         <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
                 <Typography variant="overline" color="primary.main">Auckland Community Centre</Typography>
-                <Link component={RouterLink} to="/login" underline="hover">Staff login</Link>
+                <Stack direction="row" spacing={2}>
+                    <Link component={RouterLink} to="/track" underline="hover">Track a booking</Link>
+                    <Link component={RouterLink} to="/login" underline="hover">Staff login</Link>
+                </Stack>
             </Stack>
             <Typography component="h1" variant="h3" sx={{ mb: 1 }}>Book a pickup</Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
