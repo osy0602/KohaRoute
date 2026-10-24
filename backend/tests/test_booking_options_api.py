@@ -122,15 +122,15 @@ def _selected_address():
 
 def _booking_fields(selected, pickup_date, category_id):
     """Build a multipart form payload for one valid donor booking."""
-    return [
-        ("donor_name", "Aroha Donor"),
-        ("contact_number", "021 555 0101"),
-        ("address_token", selected.token),
-        ("pickup_date", pickup_date.isoformat()),
-        ("size", "medium"),
-        ("quantity", "2"),
-        ("category_ids", str(category_id)),
-    ]
+    return {
+        "donor_name": "Aroha Donor",
+        "contact_number": "021 555 0101",
+        "address_token": selected.token,
+        "pickup_date": pickup_date.isoformat(),
+        "size": "medium",
+        "quantity": "2",
+        "category_ids": str(category_id),
+    }
 
 
 def test_submit_booking_saves_estimates_and_private_photo(
@@ -187,12 +187,10 @@ def test_invalid_booking_fields_save_nothing(
     from app.services.booking_rules import available_booking_dates
 
     category_id = seeded_options.scalar(select(Category.id).limit(1))
-    fields = dict(
-        _booking_fields(
-            _selected_address(),
-            available_booking_dates(seeded_options).dates[0],
-            category_id,
-        )
+    fields = _booking_fields(
+        _selected_address(),
+        available_booking_dates(seeded_options).dates[0],
+        category_id,
     )
     fields[field] = value
     photo_directory = tmp_path / "private-photos"

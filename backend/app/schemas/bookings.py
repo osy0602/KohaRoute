@@ -54,3 +54,13 @@ class BookingCreatedResponse(BaseModel):
     pickup_date: date
     estimated_weight_kg: int
     estimated_volume_l: int
+
+
+class BookingTrackingResponse(BaseModel):
+    """Privacy-limited information a donor may retrieve with their reference."""
+
+    status: str
+    pickup_date: date
+    address_area: str
+    rejection_reason: str | None = None
+    missed_message: str | None = None

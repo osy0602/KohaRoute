@@ -88,13 +88,13 @@ describe("BookPickup", () => {
 
     it("submits multipart donor details and shows the unguessable reference", async () => {
         renderBooking();
-        fireEvent.change(await screen.findByLabelText("Your name"), {
+        fireEvent.change(await screen.findByRole("textbox", { name: /Your name/ }), {
             target: { value: "Aroha Donor" },
         });
-        fireEvent.change(screen.getByLabelText("Contact number"), {
+        fireEvent.change(screen.getByRole("textbox", { name: /Contact number/ }), {
             target: { value: "021 555 0101" },
         });
-        fireEvent.change(screen.getByLabelText("Auckland pickup address"), {
+        fireEvent.change(screen.getByRole("textbox", { name: /Auckland pickup address/ }), {
             target: { value: "Sample Road" },
         });
         expect(await screen.findByRole("button", { name: "1 Sample Road, Auckland" })).toBeInTheDocument();
