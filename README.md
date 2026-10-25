@@ -2,8 +2,8 @@
 
 Pickup booking and route planning for Auckland Community Centre. Team Koha.
 
-This repository currently includes Parts 0-4: the foundation, seeded data/settings, staff login,
-donor pickup booking, and public booking tracking. Later features arrive one part at a time.
+This repository currently includes Parts 0-5: the foundation, seeded data/settings, staff login,
+donor pickup booking and tracking, and Admin booking review. Later features arrive one part at a time.
 
 ## Folder layout
 
@@ -122,6 +122,15 @@ contact number, or photo details. Rejected bookings include the Admin's reason; 
 show that the centre will contact the donor to reschedule. Unknown references return
 `No booking found`.
 
+## Admin booking review (Part 5)
+
+Admins review bookings at `/admin`. The list defaults to Pending and supports status and pickup-date
+filters. Admins can open details, including contact, description, photos, estimated load, and a map
+preview. Pending bookings can be approved or rejected with a reason; Approved or Missed bookings
+can be rescheduled to an open date. Review, transition, and photo endpoints are protected by the
+server-side Admin role guard. Photos are served from private storage only through the authenticated
+Admin photo endpoint.
+
 ## Where each coding standard is demonstrated
 
 | Standard | Examples across the current parts |
@@ -161,7 +170,7 @@ confirm Auckland Anniversary Day (26 Jan 2026 and 1 Feb 2027) with the client be
 
 ## Known limits
 
-- Admin booking review, vehicles, route generation, driver workflow, and maps are not built yet.
+- Vehicles, route generation, driver workflow, and the operational map/totals are not built yet.
 - The size presets, vehicle capacities, categories and depot coordinates are placeholders
   awaiting client confirmation. The depot coordinates are approximate pending a later ORS lookup.
 - There is no migration tool: the schema is created from the models. After a model change in
