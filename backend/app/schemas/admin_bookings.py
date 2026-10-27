@@ -24,7 +24,10 @@ class AdminBookingSummary(BaseModel):
     estimated_weight_kg: int
     estimated_volume_l: int
     status: str
+    driver_remark: str | None = None
     photos: list[AdminPhotoOut]
+    latitude: float
+    longitude: float
 
 
 class AdminBookingDetail(AdminBookingSummary):

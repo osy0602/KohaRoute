@@ -15,6 +15,7 @@ from app.schemas.routes import (
     GenerateRoutesResponse,
     PlanningDriverOut,
     PlanningVehicleOut,
+    RouteDailyTotals,
     RouteOut,
     RoutePlanningOptions,
     RouteStopOut,
@@ -38,7 +39,22 @@ router = APIRouter(
 
 
 def _route_out(route: Route) -> RouteOut:
-    """Convert a saved route into its Admin response representation."""
+    """Convert a saved route into its Admin response representation.
+
+    Planned figures are the snapshot saved when the route was generated; completed
+    figures are summed from stops the driver has already marked Completed. Both are
+    labelled as estimates on the Admin screen (US-08).
+    """
+    completed_weight_kg = sum(
+        stop.booking.estimated_weight_kg
+        for stop in route.stops
+        if stop.status == BookingStatus.COMPLETED
+    )
+    completed_volume_l = sum(
+        stop.booking.estimated_volume_l
+        for stop in route.stops
+        if stop.status == BookingStatus.COMPLETED
+    )
     return RouteOut(
         id=route.id,
         pickup_date=route.pickup_date,
@@ -54,6 +70,8 @@ def _route_out(route: Route) -> RouteOut:
         total_duration_s=route.total_duration_s,
         planned_weight_kg=route.planned_weight_kg,
         planned_volume_l=route.planned_volume_l,
+        completed_weight_kg=completed_weight_kg,
+        completed_volume_l=completed_volume_l,
         geometry=route.geometry,
         color=route.color,
         stops=[
@@ -72,6 +90,40 @@ def _route_out(route: Route) -> RouteOut:
             )
             for stop in route.stops
         ],
+    )
+
+
+def _daily_totals(db: Session, pickup_date: date) -> RouteDailyTotals:
+    """Sum planned and completed estimates across every saved route on one date (US-08)."""
+    routes = _load_routes(db, pickup_date)
+    planned_weight_kg = sum(route.planned_weight_kg for route in routes)
+    planned_volume_l = sum(route.planned_volume_l for route in routes)
+    completed_weight_kg = sum(
+        stop.booking.estimated_weight_kg
+        for route in routes
+        for stop in route.stops
+        if stop.status == BookingStatus.COMPLETED
+    )
+    completed_volume_l = sum(
+        stop.booking.estimated_volume_l
+        for route in routes
+        for stop in route.stops
+        if stop.status == BookingStatus.COMPLETED
+    )
+    missed_count = sum(
+        1
+        for route in routes
+        for stop in route.stops
+        if stop.status == BookingStatus.MISSED
+    )
+    return RouteDailyTotals(
+        pickup_date=pickup_date,
+        planned_weight_kg=planned_weight_kg,
+        planned_volume_l=planned_volume_l,
+        completed_weight_kg=completed_weight_kg,
+        completed_volume_l=completed_volume_l,
+        missed_count=missed_count,
+        route_count=len(routes),
     )
 
 
@@ -150,6 +202,19 @@ def read_admin_routes(
 ) -> list[RouteOut]:
     """Read the saved route plan; this endpoint never calls ORS."""
     return [_route_out(route) for route in _load_routes(db, pickup_date)]
+
+
+@router.get("/totals", response_model=RouteDailyTotals)
+def read_admin_route_totals(
+    pickup_date: Annotated[date, Query()],
+    db: Annotated[Session, Depends(get_db)],
+) -> RouteDailyTotals:
+    """Daily weight, volume and stop counts across every route on one date (US-08).
+
+    All figures are the booking *estimates* (drivers never enter a real weight) and are
+    labelled as such on the Admin screen.
+    """
+    return _daily_totals(db, pickup_date)
 
 
 @router.post("/generate", response_model=GenerateRoutesResponse)
