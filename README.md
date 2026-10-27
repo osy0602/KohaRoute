@@ -2,9 +2,9 @@
 
 Pickup booking and route planning for Auckland Community Centre. Team Koha.
 
-This repository currently includes Parts 0-6: the foundation, seeded data/settings, staff login,
-donor pickup booking and tracking, Admin booking review, and vehicle management. Later features
-arrive one part at a time.
+This repository currently includes Parts 0-7: the foundation, seeded data/settings, staff login,
+donor pickup booking and tracking, Admin booking review, vehicle management, and ORS route planning.
+Later features arrive one part at a time.
 
 ## Folder layout
 
@@ -29,6 +29,7 @@ koharoute/
     src/pages/           one file per screen
     src/theme.js         colours and type for the whole app
   scripts/               comparison script for the Project Report (added in Part 10)
+  scripts/ors_optimization_spike.py  manual ORS max_tasks/geometry check
 ```
 
 ## One-time setup
@@ -138,8 +139,19 @@ Admins manage vehicles at `/admin/vehicles`. The list shows name, plate, capacit
 and Active/Inactive status. Vehicles can be added or edited, but not deleted; deactivation is a
 soft status change. Plate numbers are normalized to uppercase and limited to six alphanumeric
 characters, and capacities must be positive whole numbers. Vehicle endpoints require the Admin
-role. Route assignments are introduced in Part 7; the shared deactivation guard rejects Planned
-or In progress route statuses once persisted assignments are connected.
+role. A vehicle with a Scheduled stop on a Planned or In progress route cannot be deactivated.
+
+## Route planning (Part 7)
+
+Admins plan a date at `/admin/routes`. Select active drivers and vehicles, then Generate. The
+backend sends Approved bookings as ORS jobs with saved `[longitude, latitude]` coordinates,
+estimated whole-kilogram weights, and litre volumes. Each selected vehicle starts and ends at the
+depot from settings and receives a fair-share `max_tasks` limit. ORS is called once; the returned
+stop order, encoded geometry, distance, duration, and planned estimate totals are stored. The map
+reads only the saved route data and never calls ORS. Unassigned bookings stay Approved. Replacing
+an untouched plan calls ORS first and then replaces it in one database transaction; replacement
+is blocked if a stop is Completed or Missed. An ORS API key is required. The manual spike can be
+run from `backend/` with `python ../scripts/ors_optimization_spike.py`.
 
 ## Where each coding standard is demonstrated
 
@@ -168,8 +180,10 @@ failed database writes roll back and remove any already-written photo files.
 | `bookings` | Donor requests, with estimated kg and litres and one of the six statuses |
 | `booking_categories` | Which categories a booking has |
 | `photos` | Photo metadata (random stored name; the file lives on disk) |
+| `routes` | Saved driver/vehicle plans, geometry, distance/duration and planned estimates |
+| `route_stops` | ORS-ordered booking stops and lifecycle status |
 
-Routes and stops arrive in Part 7.
+Driver stop updates arrive in Part 8.
 
 ## Holiday data
 
@@ -180,7 +194,7 @@ confirm Auckland Anniversary Day (26 Jan 2026 and 1 Feb 2027) with the client be
 
 ## Known limits
 
-- Route generation, driver workflow, and the operational map/totals are not built yet.
+- Driver workflow and the operational map/totals are not built yet.
 - The size presets, vehicle capacities, categories and depot coordinates are placeholders
   awaiting client confirmation. The depot coordinates are approximate pending a later ORS lookup.
 - There is no migration tool: the schema is created from the models. After a model change in
