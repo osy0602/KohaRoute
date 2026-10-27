@@ -306,6 +306,7 @@ export default function AdminBookingsPage() {
                             <TableCell>Estimated load</TableCell>
                             <TableCell>Pickup date</TableCell>
                             <TableCell>Status</TableCell>
+                            <TableCell>Driver remark</TableCell>
                             <TableCell>Photos</TableCell>
                             <TableCell align="right">Details</TableCell>
                         </TableRow>
@@ -313,12 +314,12 @@ export default function AdminBookingsPage() {
                     <TableBody>
                         {isLoading && (
                             <TableRow>
-                                <TableCell colSpan={9}>Loading bookings…</TableCell>
+                                <TableCell colSpan={10}>Loading bookings…</TableCell>
                             </TableRow>
                         )}
                         {!isLoading && bookings.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={9}>No bookings match these filters.</TableCell>
+                                <TableCell colSpan={10}>No bookings match these filters.</TableCell>
                             </TableRow>
                         )}
                         {!isLoading &&
@@ -339,6 +340,7 @@ export default function AdminBookingsPage() {
                                     <TableCell>
                                         <Chip size="small" label={statusLabel(booking.status)} />
                                     </TableCell>
+                                    <TableCell sx={{ minWidth: 150 }}>{booking.driver_remark || '—'}</TableCell>
                                     <TableCell>
                                         <Stack direction="row" spacing={0.5}>
                                             {booking.photos.slice(0, 3).map((photo, index) => (
@@ -401,6 +403,11 @@ export default function AdminBookingsPage() {
                                 {selectedBooking.rejection_reason && (
                                     <Alert severity="warning">
                                         Rejection reason: {selectedBooking.rejection_reason}
+                                    </Alert>
+                                )}
+                                {selectedBooking.driver_remark && (
+                                    <Alert severity={selectedBooking.status === 'missed' ? 'warning' : 'info'}>
+                                        Driver remark: {selectedBooking.driver_remark}
                                     </Alert>
                                 )}
                                 <Box>

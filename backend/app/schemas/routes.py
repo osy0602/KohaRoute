@@ -62,7 +62,12 @@ class RouteStopOut(BaseModel):
 
 
 class RouteOut(BaseModel):
-    """A route as saved after an ORS optimization response."""
+    """A route as saved after an ORS optimization response.
+
+    Planned figures are the sum of the booking estimates; completed figures are the sum
+    for stops the driver has already marked Completed. Both are labelled as estimates
+    on the Admin screen (US-08).
+    """
 
     id: int
     pickup_date: date
@@ -78,9 +83,23 @@ class RouteOut(BaseModel):
     total_duration_s: int
     planned_weight_kg: int
     planned_volume_l: int
+    completed_weight_kg: int
+    completed_volume_l: int
     geometry: str
     color: str
     stops: list[RouteStopOut]
+
+
+class RouteDailyTotals(BaseModel):
+    """Daily weight, volume and stop counts across every route on one date (US-08)."""
+
+    pickup_date: date
+    planned_weight_kg: int
+    planned_volume_l: int
+    completed_weight_kg: int
+    completed_volume_l: int
+    missed_count: int
+    route_count: int
 
 
 class UnassignedBookingOut(BaseModel):

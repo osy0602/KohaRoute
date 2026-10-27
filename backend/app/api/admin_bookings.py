@@ -6,12 +6,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
 from app.config import get_config
 from app.database import get_db
-from app.models import BookingStatus, Photo
+from app.models import BookingStatus, Photo, RouteStop
 from app.schemas.admin_bookings import (
     AdminBookingDetail,
     AdminBookingSummary,
@@ -35,7 +36,18 @@ router = APIRouter(
 )
 
 
-def _summary(booking) -> AdminBookingSummary:
+def _latest_driver_remark(db: Session, booking_id: int) -> str | None:
+    """Return the most recent driver remark for a booking, if one exists."""
+    statement = (
+        select(RouteStop.remark)
+        .where(RouteStop.booking_id == booking_id, RouteStop.remark.is_not(None))
+        .order_by(RouteStop.completed_at.desc(), RouteStop.id.desc())
+        .limit(1)
+    )
+    return db.scalar(statement)
+
+
+def _summary(booking, driver_remark: str | None = None) -> AdminBookingSummary:
     """Map a booking ORM row to the Admin list response."""
     return AdminBookingSummary(
         id=booking.id,
@@ -47,15 +59,18 @@ def _summary(booking) -> AdminBookingSummary:
         estimated_weight_kg=booking.estimated_weight_kg,
         estimated_volume_l=booking.estimated_volume_l,
         status=booking.status.value,
+        driver_remark=driver_remark,
         photos=[{"id": photo.id, "content_type": photo.content_type} for photo in booking.photos],
+        latitude=booking.latitude,
+        longitude=booking.longitude,
     )
 
 
-def _detail(booking) -> AdminBookingDetail:
+def _detail(booking, driver_remark: str | None = None) -> AdminBookingDetail:
     """Map all authorized booking details to the Admin response."""
-    summary = _summary(booking)
+    summary = _summary(booking, driver_remark)
     return AdminBookingDetail(
-        **summary.model_dump(),
+        **summary.model_dump(exclude={"latitude", "longitude"}),
         contact_number=booking.contact_number,
         latitude=booking.latitude,
         longitude=booking.longitude,
@@ -103,7 +118,18 @@ def read_admin_bookings(
                 detail=f"Status must be one of: {allowed}.",
             ) from error
     bookings = list_bookings_for_admin(db, selected_status, pickup_date)
-    return [_summary(booking) for booking in bookings]
+    if not bookings:
+        return []
+    booking_ids = [booking.id for booking in bookings]
+    stops = db.scalars(
+        select(RouteStop)
+        .where(RouteStop.booking_id.in_(booking_ids), RouteStop.remark.is_not(None))
+        .order_by(RouteStop.completed_at.desc(), RouteStop.id.desc())
+    ).all()
+    remarks: dict[int, str] = {}
+    for stop in stops:
+        remarks.setdefault(stop.booking_id, stop.remark)
+    return [_summary(booking, remarks.get(booking.id)) for booking in bookings]
 
 
 @router.get("/{booking_id}", response_model=AdminBookingDetail)
@@ -111,7 +137,7 @@ def read_admin_booking(
     booking_id: int, db: Annotated[Session, Depends(get_db)]
 ) -> AdminBookingDetail:
     """Return full donor, description, photo, estimate, and map-coordinate details."""
-    return _detail(_get_booking(booking_id, db))
+    return _detail(_get_booking(booking_id, db), _latest_driver_remark(db, booking_id))
 
 
 @router.get("/{booking_id}/photos/{photo_id}")
@@ -137,7 +163,7 @@ def approve_admin_booking(
     booking_id: int, db: Annotated[Session, Depends(get_db)]
 ) -> AdminBookingDetail:
     """Approve a Pending booking for later route planning."""
-    return _detail(_transition(approve_booking, db, booking_id))
+    return _detail(_transition(approve_booking, db, booking_id), _latest_driver_remark(db, booking_id))
 
 
 @router.post("/{booking_id}/reject", response_model=AdminBookingDetail)
@@ -147,7 +173,10 @@ def reject_admin_booking(
     db: Annotated[Session, Depends(get_db)],
 ) -> AdminBookingDetail:
     """Reject a Pending booking and save the reason visible to the donor."""
-    return _detail(_transition(reject_booking, db, booking_id, payload.reason))
+    return _detail(
+        _transition(reject_booking, db, booking_id, payload.reason),
+        _latest_driver_remark(db, booking_id),
+    )
 
 
 @router.post("/{booking_id}/reschedule", response_model=AdminBookingDetail)
@@ -157,4 +186,7 @@ def reschedule_admin_booking(
     db: Annotated[Session, Depends(get_db)],
 ) -> AdminBookingDetail:
     """Reschedule an Approved or Missed booking to an open date."""
-    return _detail(_transition(reschedule_booking, db, booking_id, payload.pickup_date))
+    return _detail(
+        _transition(reschedule_booking, db, booking_id, payload.pickup_date),
+        _latest_driver_remark(db, booking_id),
+    )
