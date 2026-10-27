@@ -242,6 +242,9 @@ export default function AdminBookingsPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={2} alignItems="center">
+          <Button component={Link} href="/admin/vehicles" variant="outlined">
+            Vehicles
+          </Button>
           <Typography color="text.secondary">{user?.full_name}</Typography>
           <Button variant="outlined" onClick={logout}>
             Log out

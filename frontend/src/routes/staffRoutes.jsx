@@ -2,6 +2,7 @@ import { Route } from 'react-router-dom';
 import RequireRole from '../auth/RequireRole';
 import LoginPage from '../pages/LoginPage';
 import AdminBookingsPage from '../pages/AdminBookingsPage';
+import AdminVehiclesPage from '../pages/AdminVehiclesPage';
 import StaffHomePlaceholder from '../pages/StaffHomePlaceholder';
 
 /**
@@ -10,6 +11,14 @@ import StaffHomePlaceholder from '../pages/StaffHomePlaceholder';
 export const staffRoutes = (
   <>
     <Route path="/login" element={<LoginPage />} />
+    <Route
+      path="/admin/vehicles"
+      element={
+        <RequireRole role="admin">
+          <AdminVehiclesPage />
+        </RequireRole>
+      }
+    />
     <Route
       path="/admin/*"
       element={

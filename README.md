@@ -2,8 +2,9 @@
 
 Pickup booking and route planning for Auckland Community Centre. Team Koha.
 
-This repository currently includes Parts 0-5: the foundation, seeded data/settings, staff login,
-donor pickup booking and tracking, and Admin booking review. Later features arrive one part at a time.
+This repository currently includes Parts 0-6: the foundation, seeded data/settings, staff login,
+donor pickup booking and tracking, Admin booking review, and vehicle management. Later features
+arrive one part at a time.
 
 ## Folder layout
 
@@ -131,6 +132,15 @@ can be rescheduled to an open date. Review, transition, and photo endpoints are 
 server-side Admin role guard. Photos are served from private storage only through the authenticated
 Admin photo endpoint.
 
+## Vehicle management (Part 6)
+
+Admins manage vehicles at `/admin/vehicles`. The list shows name, plate, capacity in kg and m³,
+and Active/Inactive status. Vehicles can be added or edited, but not deleted; deactivation is a
+soft status change. Plate numbers are normalized to uppercase and limited to six alphanumeric
+characters, and capacities must be positive whole numbers. Vehicle endpoints require the Admin
+role. Route assignments are introduced in Part 7; the shared deactivation guard rejects Planned
+or In progress route statuses once persisted assignments are connected.
+
 ## Where each coding standard is demonstrated
 
 | Standard | Examples across the current parts |
@@ -170,7 +180,7 @@ confirm Auckland Anniversary Day (26 Jan 2026 and 1 Feb 2027) with the client be
 
 ## Known limits
 
-- Vehicles, route generation, driver workflow, and the operational map/totals are not built yet.
+- Route generation, driver workflow, and the operational map/totals are not built yet.
 - The size presets, vehicle capacities, categories and depot coordinates are placeholders
   awaiting client confirmation. The depot coordinates are approximate pending a later ORS lookup.
 - There is no migration tool: the schema is created from the models. After a model change in
