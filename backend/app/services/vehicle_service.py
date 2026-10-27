@@ -3,11 +3,11 @@
 import re
 from collections.abc import Iterable
 
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import Vehicle
+from app.models import BookingStatus, Route, RouteStop, Vehicle
 
 _NZ_PLATE = re.compile(r"^[A-Z0-9]{1,6}$")
 ACTIVE_ROUTE_STATUSES = frozenset({"planned", "in_progress"})
@@ -148,9 +148,17 @@ def update_vehicle(
 def deactivate_vehicle(db: Session, vehicle_id: int) -> Vehicle:
     """Deactivate a vehicle after checking route status when route data is available."""
     vehicle = get_vehicle(db, vehicle_id)
-    # Routes are introduced in Part 7. At that point, pass persisted statuses into the shared
-    # ensure_vehicle_not_on_active_route rule before changing this flag.
-    ensure_vehicle_not_on_active_route(())
+    has_scheduled_stop = db.scalar(
+        select(
+            exists().where(
+                Route.vehicle_id == vehicle_id,
+                RouteStop.route_id == Route.id,
+                RouteStop.status == BookingStatus.SCHEDULED,
+            )
+        )
+    )
+    if has_scheduled_stop:
+        ensure_vehicle_not_on_active_route(("planned",))
     vehicle.is_active = False
     db.commit()
     db.refresh(vehicle)

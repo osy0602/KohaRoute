@@ -1,9 +1,12 @@
+import { Suspense, lazy } from 'react';
 import { Route } from 'react-router-dom';
 import RequireRole from '../auth/RequireRole';
 import LoginPage from '../pages/LoginPage';
 import AdminBookingsPage from '../pages/AdminBookingsPage';
 import AdminVehiclesPage from '../pages/AdminVehiclesPage';
 import StaffHomePlaceholder from '../pages/StaffHomePlaceholder';
+
+const AdminRoutesPage = lazy(() => import('../pages/AdminRoutesPage'));
 
 /**
  * Login, Admin booking review, and the driver placeholder, each behind a role guard.
@@ -16,6 +19,16 @@ export const staffRoutes = (
       element={
         <RequireRole role="admin">
           <AdminVehiclesPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/admin/routes"
+      element={
+        <RequireRole role="admin">
+          <Suspense fallback={<p>Loading route planner…</p>}>
+            <AdminRoutesPage />
+          </Suspense>
         </RequireRole>
       }
     />
