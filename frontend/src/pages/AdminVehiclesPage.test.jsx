@@ -20,6 +20,8 @@ vi.mock('../api/adminVehicles', () => ({
   updateAdminVehicle: vi.fn(),
 }));
 
+const CAPACITY_ERROR = 'Enter a positive volume in m³, with up to 3 decimal places.';
+
 const activeVehicle = {
   id: 1,
   name: 'Demo Van',
@@ -68,8 +70,8 @@ describe('AdminVehiclesPage', () => {
     fireEvent.change(within(dialog).getByRole('spinbutton', { name: /Capacity \(kg\)/ }), {
       target: { value: '500' },
     });
-    fireEvent.change(within(dialog).getByRole('spinbutton', { name: /Capacity \(litres\)/ }), {
-      target: { value: '2500' },
+    fireEvent.change(within(dialog).getByRole('spinbutton', { name: /Capacity \(m³\)/ }), {
+      target: { value: '2.5' },
     });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add vehicle' }));
 
@@ -102,5 +104,47 @@ describe('AdminVehiclesPage', () => {
     const confirmDialog = screen.getByRole('dialog', { name: 'Deactivate vehicle?' });
     fireEvent.click(within(confirmDialog).getByRole('button', { name: 'Deactivate' }));
     await waitFor(() => expect(deactivateAdminVehicle).toHaveBeenCalledWith(1));
+  });
+
+  it('shows capacity in m³ when editing and keeps the stored litres unchanged', async () => {
+    renderVehicles();
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    const editDialog = screen.getByRole('dialog', { name: 'Edit vehicle' });
+    expect(within(editDialog).getByRole('spinbutton', { name: /Capacity \(m³\)/ })).toHaveValue(
+      3,
+    );
+    expect(within(editDialog).queryByLabelText(/litres/i)).not.toBeInTheDocument();
+
+    fireEvent.click(within(editDialog).getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(updateAdminVehicle).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ capacity_litres: 3000 }),
+      ),
+    );
+  });
+
+  it('blocks a zero, negative or over-precise m³ capacity and saves nothing', async () => {
+    renderVehicles();
+    fireEvent.click(await screen.findByRole('button', { name: 'Add vehicle' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add vehicle' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: /Vehicle name/ }), {
+      target: { value: 'Test Van' },
+    });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: /Plate number/ }), {
+      target: { value: 'TEST01' },
+    });
+    fireEvent.change(within(dialog).getByRole('spinbutton', { name: /Capacity \(kg\)/ }), {
+      target: { value: '400' },
+    });
+
+    for (const invalid of ['0', '-2', '1.2345']) {
+      fireEvent.change(within(dialog).getByRole('spinbutton', { name: /Capacity \(m³\)/ }), {
+        target: { value: invalid },
+      });
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Add vehicle' }));
+      expect(await within(dialog).findByText(CAPACITY_ERROR)).toBeInTheDocument();
+    }
+    expect(createAdminVehicle).not.toHaveBeenCalled();
   });
 });

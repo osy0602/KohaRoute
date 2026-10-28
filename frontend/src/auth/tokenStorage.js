@@ -1,6 +1,6 @@
 // Keeps the access token in sessionStorage (cleared when the tab closes).
 // Every call is wrapped in try/catch because the browser can block storage.
-const TOKEN_KEY = "koharoute.token";
+const TOKEN_KEY = 'koharoute.token';
 
 /** Return the saved token, or null if there is none or storage is blocked. */
 export function getToken() {

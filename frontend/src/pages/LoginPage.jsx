@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Alert, Box, Button, Container, TextField, Typography } from "@mui/material";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
-import { homePathForRole } from "../auth/roleHome";
+import { useState } from 'react';
+import { Alert, Box, Button, Container, TextField, Typography } from '@mui/material';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { homePathForRole } from '../auth/roleHome';
 
 /** Check both fields are filled in; returns messages keyed by field name. */
 function validate(email, password) {
   const errors = {};
-  if (!email.trim()) errors.email = "Enter your email.";
-  if (!password) errors.password = "Enter your password.";
+  if (!email.trim()) errors.email = 'Enter your email.';
+  if (!password) errors.password = 'Enter your password.';
   return errors;
 }
 
@@ -17,10 +17,10 @@ export default function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
-  const [serverError, setServerError] = useState("");
+  const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (user) return <Navigate to={homePathForRole(user.role)} replace />;
@@ -29,7 +29,7 @@ export default function LoginPage() {
     event.preventDefault();
     const errors = validate(email, password);
     setFieldErrors(errors);
-    setServerError("");
+    setServerError('');
     if (Object.keys(errors).length > 0) return;
 
     setIsSubmitting(true);
@@ -54,7 +54,7 @@ export default function LoginPage() {
         KohaRoute for Auckland Community Centre admins and drivers.
       </Typography>
 
-      <Box component="form" noValidate onSubmit={handleSubmit} sx={{ display: "grid", gap: 2 }}>
+      <Box component="form" noValidate onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2 }}>
         {serverError && <Alert severity="error">{serverError}</Alert>}
         <TextField
           label="Email"
@@ -77,7 +77,7 @@ export default function LoginPage() {
           fullWidth
         />
         <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
-          {isSubmitting ? "Logging in…" : "Log in"}
+          {isSubmitting ? 'Logging in…' : 'Log in'}
         </Button>
       </Box>
     </Container>

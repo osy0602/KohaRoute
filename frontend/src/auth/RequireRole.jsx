@@ -1,7 +1,7 @@
-import { Box, CircularProgress } from "@mui/material";
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "./AuthContext";
-import { homePathForRole } from "./roleHome";
+import { Box, CircularProgress } from '@mui/material';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+import { homePathForRole } from './roleHome';
 
 /**
  * Route guard for convenience only: the backend role check is the real protection.
@@ -13,7 +13,7 @@ export default function RequireRole({ role, children }) {
 
   if (isRestoring) {
     return (
-      <Box sx={{ display: "grid", placeItems: "center", minHeight: "60vh" }}>
+      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}>
         <CircularProgress aria-label="Loading" />
       </Box>
     );

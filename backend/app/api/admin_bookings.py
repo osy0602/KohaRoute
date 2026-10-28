@@ -72,6 +72,8 @@ def _detail(booking, driver_remark: str | None = None) -> AdminBookingDetail:
     return AdminBookingDetail(
         **summary.model_dump(exclude={"latitude", "longitude"}),
         contact_number=booking.contact_number,
+        size=booking.size,
+        quantity=booking.quantity,
         latitude=booking.latitude,
         longitude=booking.longitude,
         description=booking.description,

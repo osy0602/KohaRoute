@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { apiRequest, setSessionExpiredHandler } from "../api/http";
-import { clearToken, getToken, saveToken } from "./tokenStorage";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { apiRequest, setSessionExpiredHandler } from '../api/http';
+import { clearToken, getToken, saveToken } from './tokenStorage';
 
 const AuthContext = createContext(null);
 
@@ -17,15 +17,15 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     setSessionExpiredHandler(() => setUser(null));
     if (!getToken()) return;
-    apiRequest("/api/auth/me")
+    apiRequest('/api/auth/me')
       .then(setUser)
       .catch(clearToken) // expired or invalid token: fall back to the login page
       .finally(() => setIsRestoring(false));
   }, []);
 
   const login = useCallback(async (email, password) => {
-    const result = await apiRequest("/api/auth/login", {
-      method: "POST",
+    const result = await apiRequest('/api/auth/login', {
+      method: 'POST',
       body: { email, password },
     });
     saveToken(result.access_token);
@@ -43,6 +43,6 @@ export function AuthProvider({ children }) {
 /** Access the current user and the login and logout actions. */
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
+  if (!context) throw new Error('useAuth must be used inside AuthProvider');
   return context;
 }
