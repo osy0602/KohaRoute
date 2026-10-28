@@ -1,5 +1,5 @@
-import { Button, Container, Typography } from "@mui/material";
-import { useAuth } from "../auth/AuthContext";
+import { Button, Container, Typography } from '@mui/material';
+import { useAuth } from '../auth/AuthContext';
 
 /** Temporary landing page for each role. Replaced by real screens in Parts 5 to 9. */
 export default function StaffHomePlaceholder({ title }) {

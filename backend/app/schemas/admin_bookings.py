@@ -34,6 +34,8 @@ class AdminBookingDetail(AdminBookingSummary):
     """Full booking details visible only to an Admin."""
 
     contact_number: str
+    size: str
+    quantity: int
     latitude: float
     longitude: float
     description: str | None

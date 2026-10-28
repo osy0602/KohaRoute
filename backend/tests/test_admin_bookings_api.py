@@ -160,6 +160,9 @@ def test_admin_detail_includes_full_booking_fields_and_coordinates(staff_client,
     body = response.json()
     assert body["contact_number"] == "021 555 0101"
     assert body["description"] == "Two boxes of household items."
+    # The size preset and quantity behind the estimate are shown to the Admin (US-04).
+    assert body["size"] == "medium"
+    assert body["quantity"] == 2
     assert body["latitude"] == pytest.approx(-36.818826)
     assert body["longitude"] == pytest.approx(174.609864)
 

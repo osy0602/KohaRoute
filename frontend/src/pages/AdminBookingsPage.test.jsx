@@ -39,6 +39,8 @@ const pendingSummary = {
 const pendingDetail = {
   ...pendingSummary,
   contact_number: '021 555 0101',
+  size: 'medium',
+  quantity: 2,
   latitude: -36.818826,
   longitude: 174.609864,
   description: 'Two boxes.',
@@ -76,7 +78,7 @@ describe('AdminBookingsPage', () => {
     expect(await screen.findByText('KR-PENDING-01')).toBeInTheDocument();
     expect(screen.getByText('Aroha Donor')).toBeInTheDocument();
     expect(screen.getByText('Household items')).toBeInTheDocument();
-    expect(screen.getByText('30 kg · 120 L')).toBeInTheDocument();
+    expect(screen.getByText('30 kg · 0.12 m³')).toBeInTheDocument();
     expect(getAdminBookings).toHaveBeenCalledWith({ status: 'pending', pickupDate: '' });
   });
 
@@ -85,6 +87,9 @@ describe('AdminBookingsPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Review' }));
     expect(await screen.findByText('Two boxes.')).toBeInTheDocument();
     expect(screen.getByText('021 555 0101')).toBeInTheDocument();
+    // Volume is shown in m³ and the size/quantity behind the estimate are not blank.
+    expect(screen.getByText('30 kg · 0.12 m³ estimated')).toBeInTheDocument();
+    expect(screen.getByText('Size: Medium · Quantity: 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reschedule' })).not.toBeInTheDocument();
@@ -115,5 +120,43 @@ describe('AdminBookingsPage', () => {
     });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save date' }));
     await waitFor(() => expect(rescheduleAdminBooking).toHaveBeenCalledWith(1, '2026-10-21'));
+  });
+
+  it('shows a rejected reschedule date inside the dialog, not behind it', async () => {
+    const message =
+      'Choose an open pickup date between Thursday 29 October and Wednesday 4 November.';
+    rescheduleAdminBooking.mockRejectedValue(new Error(message));
+    getAdminBookings.mockResolvedValue([{ ...pendingSummary, status: 'approved' }]);
+    getAdminBooking.mockResolvedValue({ ...pendingDetail, status: 'approved' });
+    renderAdmin();
+    fireEvent.click(await screen.findByRole('button', { name: 'Review' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Reschedule' }));
+    const dialog = screen.getByRole('dialog', { name: 'Reschedule pickup' });
+    fireEvent.change(within(dialog).getByLabelText(/New pickup date/), {
+      target: { value: '2026-10-24' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save date' }));
+
+    // The message is inside the open dialog, appears once, and the dialog stays open.
+    expect(await within(dialog).findByText(message)).toBeInTheDocument();
+    expect(screen.getAllByText(message)).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: 'Reschedule pickup' })).toBeInTheDocument();
+
+    // Picking another date clears the old message so it is not left on screen.
+    fireEvent.change(within(dialog).getByLabelText(/New pickup date/), {
+      target: { value: '2026-10-29' },
+    });
+    expect(within(dialog).queryByText(message)).not.toBeInTheDocument();
+  });
+
+  it('shows a failed approval inside the booking dialog', async () => {
+    approveAdminBooking.mockRejectedValue(new Error('Only Pending bookings can be approved.'));
+    renderAdmin();
+    fireEvent.click(await screen.findByRole('button', { name: 'Review' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
+    const dialog = screen.getByRole('dialog', { name: /Aroha Donor/ });
+    expect(
+      await within(dialog).findByText('Only Pending bookings can be approved.'),
+    ).toBeInTheDocument();
   });
 });
