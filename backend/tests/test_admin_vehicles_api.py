@@ -206,13 +206,26 @@ def test_active_route_conflict_is_returned_as_http_409(vehicle_client, monkeypat
     vehicle_client["db"].add(vehicle)
     vehicle_client["db"].commit()
 
-    def reject_active_route(_statuses):
-        raise VehicleInUseError("This vehicle is on a Planned or In progress route.")
-
-    monkeypatch.setattr(
-        "app.services.vehicle_service.ensure_vehicle_not_on_active_route",
-        reject_active_route,
+    from app.models import Route
+    from datetime import date
+    route = Route(
+        pickup_date=date.today(),
+        driver_id=1,
+        vehicle_id=vehicle.id,
+        vehicle_name="Van",
+        vehicle_plate_number="KOHA03",
+        vehicle_capacity_kg=600,
+        vehicle_capacity_litres=3000,
+        total_distance_m=1000,
+        total_duration_s=3600,
+        planned_weight_kg=50,
+        planned_volume_l=100,
+        geometry="",
+        color="#247BA0",
     )
+    vehicle_client["db"].add(route)
+    vehicle_client["db"].commit()
+
     response = vehicle_client["client"].patch(
         f"/api/admin/vehicles/{vehicle.id}/deactivate",
         headers=vehicle_client["admin"],

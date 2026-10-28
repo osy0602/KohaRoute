@@ -1,0 +1,26 @@
+# One place for formatter, linter and test settings (the "Indentation and Formatting" standard).
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/F: pyflakes + pycodestyle, I: import order, N: naming, UP: modern syntax,
+# B: likely bugs, D: docstrings (the "Commenting and Documentation" standard).
+select = ["E", "F", "I", "N", "UP", "B", "D"]
+ignore = ["D107"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Test functions are named after the behaviour they check; a docstring on each is noise.
+"tests/*" = ["D"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

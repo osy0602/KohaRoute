@@ -3,11 +3,11 @@
 import re
 from collections.abc import Iterable
 
-from sqlalchemy import exists, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
-from app.models import BookingStatus, Route, RouteStop, Vehicle
+from app.models import BookingStatus, Route, Vehicle
 
 _NZ_PLATE = re.compile(r"^[A-Z0-9]{1,6}$")
 ACTIVE_ROUTE_STATUSES = frozenset({"planned", "in_progress"})
@@ -146,19 +146,20 @@ def update_vehicle(
 
 
 def deactivate_vehicle(db: Session, vehicle_id: int) -> Vehicle:
-    """Deactivate a vehicle after checking route status when route data is available."""
+    """Deactivate a vehicle after checking it is not on a Planned or In progress route."""
     vehicle = get_vehicle(db, vehicle_id)
-    has_scheduled_stop = db.scalar(
-        select(
-            exists().where(
-                Route.vehicle_id == vehicle_id,
-                RouteStop.route_id == Route.id,
-                RouteStop.status == BookingStatus.SCHEDULED,
-            )
-        )
-    )
-    if has_scheduled_stop:
-        ensure_vehicle_not_on_active_route(("planned",))
+    routes = db.scalars(
+        select(Route)
+        .where(Route.vehicle_id == vehicle_id)
+        .options(selectinload(Route.stops))
+    ).all()
+    for route in routes:
+        stop_statuses = [stop.status for stop in route.stops]
+        if not stop_statuses or not all(
+            status in {BookingStatus.COMPLETED, BookingStatus.MISSED}
+            for status in stop_statuses
+        ):
+            raise VehicleInUseError("This vehicle is on a Planned or In progress route.")
     vehicle.is_active = False
     db.commit()
     db.refresh(vehicle)

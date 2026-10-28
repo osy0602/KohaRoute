@@ -23,7 +23,7 @@ class RouteStop(Base):
     __tablename__ = "route_stops"
     __table_args__ = (
         UniqueConstraint("route_id", "sequence", name="uq_route_stops_route_sequence"),
-        UniqueConstraint("booking_id", name="uq_route_stops_booking"),
+        UniqueConstraint("route_id", "booking_id", name="uq_route_stops_route_booking"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

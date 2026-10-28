@@ -15,6 +15,7 @@ from app.api.admin_routes import router as admin_routes_router
 from app.api.admin_vehicles import router as admin_vehicles_router
 from app.api.auth import router as auth_router
 from app.api.bookings import router as bookings_router
+from app.api.driver_routes import router as driver_routes_router
 from app.api.health import router as health_router
 from app.config import get_config
 from app.database import create_tables
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     application.include_router(admin_bookings_router)
     application.include_router(admin_vehicles_router)
     application.include_router(admin_routes_router)
+    application.include_router(driver_routes_router)
     return application
 
 

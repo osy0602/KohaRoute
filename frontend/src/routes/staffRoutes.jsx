@@ -7,6 +7,7 @@ import AdminVehiclesPage from '../pages/AdminVehiclesPage';
 import StaffHomePlaceholder from '../pages/StaffHomePlaceholder';
 
 const AdminRoutesPage = lazy(() => import('../pages/AdminRoutesPage'));
+const DriverRoutePage = lazy(() => import('../pages/DriverRoutePage'));
 
 /**
  * Login, Admin booking review, and the driver placeholder, each behind a role guard.
@@ -44,7 +45,9 @@ export const staffRoutes = (
       path="/driver/*"
       element={
         <RequireRole role="driver">
-          <StaffHomePlaceholder title="My route" />
+          <Suspense fallback={<p>Loading your route…</p>}>
+            <DriverRoutePage />
+          </Suspense>
         </RequireRole>
       }
     />

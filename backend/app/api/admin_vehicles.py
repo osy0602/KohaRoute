@@ -88,6 +88,6 @@ def deactivate_admin_vehicle(
     """Mark a vehicle inactive without deleting its record."""
     try:
         vehicle = deactivate_vehicle(db, vehicle_id)
-    except (ValueError, VehicleNotFoundError) as error:
+    except (ValueError, VehicleInUseError, VehicleNotFoundError) as error:
         raise _translate_error(error) from error
     return VehicleOut.model_validate(vehicle)

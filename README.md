@@ -2,9 +2,9 @@
 
 Pickup booking and route planning for Auckland Community Centre. Team Koha.
 
-This repository currently includes Parts 0-7: the foundation, seeded data/settings, staff login,
-donor pickup booking and tracking, Admin booking review, vehicle management, ORS route planning, and the Admin live map and daily totals.
-Later features arrive one part at a time.
+This repository currently includes Parts 0-8: the foundation, seeded data/settings, staff login,
+donor pickup booking and tracking, Admin booking review, vehicle management, ORS route planning,
+and driver routes and pickup updates. Later features arrive one part at a time.
 
 ## Folder layout
 
@@ -153,16 +153,6 @@ an untouched plan calls ORS first and then replaces it in one database transacti
 is blocked if a stop is Completed or Missed. An ORS API key is required. The manual spike can be
 run from `backend/` with `python ../scripts/ors_optimization_spike.py`.
 
-## Admin live map and daily totals
-
-The Admin route page at `/admin/routes` shows the saved route geometry and numbered stop markers
-for the selected date. Completed and Missed stops use their status colour; other stops use the
-route colour. Booking markers show the donor's saved location, and popups show the driver remark
-when a stop was Missed. The map, routes and totals refresh every 60 seconds while "Live" is on and
-never call ORS. A daily summary shows planned and completed weight (kg) and volume (L), the number
-of Missed stops, and the number of routes. All weights and volumes are booking estimates; drivers
-never enter a real weight.
-
 ## Where each coding standard is demonstrated
 
 | Standard | Examples across the current parts |
@@ -193,7 +183,15 @@ failed database writes roll back and remove any already-written photo files.
 | `routes` | Saved driver/vehicle plans, geometry, distance/duration and planned estimates |
 | `route_stops` | ORS-ordered booking stops and lifecycle status |
 
-Driver stop updates arrive in Part 8.
+## Driver routes and pickup updates (Part 8)
+
+Drivers open `/driver` to see only their assigned route for the selected day (NZ today by default),
+with the next Scheduled stop first. Stop details include donor contact, categories, description,
+photos, and a Google Maps navigation link. The route map uses the geometry saved in Part 7 and
+does not call ORS. Drivers can mark a Scheduled stop Completed or Missed; Missed requires a remark.
+The backend records the new stop/booking status, timestamp, remark, and driver, and prevents a
+driver from reading or updating another driver's route. Completed and Missed stops cannot be
+changed by a driver; Missed bookings must be rescheduled by an Admin.
 
 ## Holiday data
 
@@ -204,7 +202,7 @@ confirm Auckland Anniversary Day (26 Jan 2026 and 1 Feb 2027) with the client be
 
 ## Known limits
 
-- The driver workflow (route page and pickup updates) is not built yet.
+- The Admin operational map and weight/volume totals are not built yet.
 - The size presets, vehicle capacities, categories and depot coordinates are placeholders
   awaiting client confirmation. The depot coordinates are approximate pending a later ORS lookup.
 - There is no migration tool: the schema is created from the models. After a model change in
