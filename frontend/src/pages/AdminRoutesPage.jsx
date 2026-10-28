@@ -32,9 +32,10 @@ import {
     getRoutePlanningOptions,
 } from '../api/adminRoutes';
 import { getAdminBookings } from '../api/adminBookings';
+import { routeColors, statusColors } from '../theme';
 import 'leaflet/dist/leaflet.css';
 
-const ROUTE_COLORS = ['#247BA0', '#F25F5C', '#70C1B3', '#50514F', '#9B5DE5', '#F18F01'];
+const ROUTE_COLORS = routeColors;
 const DEFAULT_DEPOT = [-36.815, 174.61];
 
 function toLocalDate(date) {
@@ -53,14 +54,7 @@ function formatDuration(seconds) {
 }
 
 function statusColor(status) {
-    switch (status) {
-        case 'pending': return '#6c757d';
-        case 'approved': return '#ffc107';
-        case 'scheduled': return '#247BA0';
-        case 'completed': return '#28a745';
-        case 'missed': return '#dc3545';
-        default: return '#6c757d';
-    }
+    return statusColors[status] ?? statusColors.pending;
 }
 
 // Completed/Missed stops use their status colour; otherwise keep the route colour.
@@ -356,30 +350,30 @@ export default function AdminRoutesPage() {
             </Stack>
 
             {dailyTotals && (
-                <Box sx={{ mb: 2, bgcolor: 'background.paper', p: 2, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                <Box sx={{ mb: 2, bgcolor: 'background.paper', p: 2, borderRadius: 3, border: 1, borderColor: 'divider' }}>
                     <Typography variant="subtitle2" color="text.secondary">Daily estimates &bull; {new Intl.DateTimeFormat('en-NZ', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${dailyTotals.pickup_date}T12:00:00`))}</Typography>
                     <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#e9ecef', borderRadius: 1 }}>
+                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E3EDEA', borderRadius: 1 }}>
                             <Typography variant="caption" color="text.secondary">Planned weight</Typography>
                             <Typography variant="h6">{dailyTotals.planned_weight_kg} kg</Typography>
                         </Box>
-                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#e9ecef', borderRadius: 1 }}>
+                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E3EDEA', borderRadius: 1 }}>
                             <Typography variant="caption" color="text.secondary">Planned volume</Typography>
                             <Typography variant="h6">{dailyTotals.planned_volume_l} L</Typography>
                         </Box>
-                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#d4edda', borderRadius: 1 }}>
+                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#DDF1E4', borderRadius: 1 }}>
                             <Typography variant="caption" color="text.secondary">Completed weight</Typography>
                             <Typography variant="h6">{dailyTotals.completed_weight_kg} kg</Typography>
                         </Box>
-                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#d4edda', borderRadius: 1 }}>
+                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#DDF1E4', borderRadius: 1 }}>
                             <Typography variant="caption" color="text.secondary">Completed volume</Typography>
                             <Typography variant="h6">{dailyTotals.completed_volume_l} L</Typography>
                         </Box>
-                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#f8d7da', borderRadius: 1 }}>
+                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#F8DEDA', borderRadius: 1 }}>
                             <Typography variant="caption" color="text.secondary">Missed stops</Typography>
                             <Typography variant="h6">{dailyTotals.missed_count}</Typography>
                         </Box>
-                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#e2e3e5', borderRadius: 1 }}>
+                        <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E8ECEB', borderRadius: 1 }}>
                             <Typography variant="caption" color="text.secondary">Routes</Typography>
                             <Typography variant="h6">{dailyTotals.route_count}</Typography>
                         </Box>
@@ -474,7 +468,7 @@ export default function AdminRoutesPage() {
                 </Box>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={{ height: { xs: 360, md: 560 }, width: '100%', overflow: 'hidden', borderRadius: 1 }}>
+                    <Box sx={{ height: { xs: 360, md: 560 }, width: '100%', overflow: 'hidden', borderRadius: 3, border: 1, borderColor: 'divider' }}>
                         <MapContainer center={DEFAULT_DEPOT} zoom={10} style={{ height: '100%', width: '100%' }}>
                             <TileLayer
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
