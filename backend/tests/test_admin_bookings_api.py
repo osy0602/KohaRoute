@@ -3,12 +3,14 @@
 from datetime import date, timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from app.services.booking_rules import available_booking_dates
 
 import pytest
 
 from app.models import Booking, BookingStatus, Category, Photo, User, UserRole
 from app.security import create_access_token
 from app.seed import seed_closed_dates, seed_settings
+from app.services.booking_rules import available_booking_dates
 
 
 def auth_headers(user_id: int, role: str) -> dict[str, str]:
@@ -212,16 +214,17 @@ def test_reschedule_approved_or_missed_to_an_open_day(staff_client, review_data)
     """Approved and Missed bookings are moved to an open date and return to Approved."""
     client = staff_client["client"]
     headers = staff_client["admin"]
+    open_day = available_booking_dates(staff_client["db"]).earliest.isoformat()
     for key in ("approved", "missed"):
         booking_id = review_data[key].id
         response = client.post(
             f"/api/admin/bookings/{booking_id}/reschedule",
-            json={"pickup_date": "2026-10-20"},
+            json={"pickup_date": open_day},
             headers=headers,
         )
         assert response.status_code == 200
         assert response.json()["status"] == "approved"
-        assert response.json()["pickup_date"] == "2026-10-20"
+        assert response.json()["pickup_date"] == open_day
 
 
 def test_pending_booking_cannot_be_rescheduled(staff_client, review_data):

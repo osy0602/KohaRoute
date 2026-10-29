@@ -361,27 +361,27 @@ export default function AdminRoutesPage() {
         <Box sx={{ mb: 2, bgcolor: 'background.paper', p: 2, borderRadius: 3, border: 1, borderColor: 'divider' }}>
           <Typography variant="subtitle2" color="text.secondary">Daily estimates &bull; {new Intl.DateTimeFormat('en-NZ', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${dailyTotals.pickup_date}T12:00:00`))}</Typography>
           <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E3EDEA', borderRadius: 1 }}>
+            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E3EDEA', color: '#12343B', borderRadius: 1 }}>
               <Typography variant="caption" color="text.secondary">Planned weight</Typography>
               <Typography variant="h6">{dailyTotals.planned_weight_kg} kg</Typography>
             </Box>
-            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E3EDEA', borderRadius: 1 }}>
+            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E3EDEA', color: '#12343B', borderRadius: 1 }}>
               <Typography variant="caption" color="text.secondary">Planned volume</Typography>
               <Typography variant="h6">{formatVolumeM3(dailyTotals.planned_volume_l)}</Typography>
             </Box>
-            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#DDF1E4', borderRadius: 1 }}>
+            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#DDF1E4', color: '#12343B', borderRadius: 1 }}>
               <Typography variant="caption" color="text.secondary">Completed weight</Typography>
               <Typography variant="h6">{dailyTotals.completed_weight_kg} kg</Typography>
             </Box>
-            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#DDF1E4', borderRadius: 1 }}>
+            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#DDF1E4', color: '#12343B', borderRadius: 1 }}>
               <Typography variant="caption" color="text.secondary">Completed volume</Typography>
               <Typography variant="h6">{formatVolumeM3(dailyTotals.completed_volume_l)}</Typography>
             </Box>
-            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#F8DEDA', borderRadius: 1 }}>
+            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#F8DEDA', color: '#12343B', borderRadius: 1 }}>
               <Typography variant="caption" color="text.secondary">Missed stops</Typography>
               <Typography variant="h6">{dailyTotals.missed_count}</Typography>
             </Box>
-            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E8ECEB', borderRadius: 1 }}>
+            <Box sx={{ flex: 1, textAlign: 'center', p: 1, bgcolor: '#E8ECEB', color: '#12343B', borderRadius: 1 }}>
               <Typography variant="caption" color="text.secondary">Routes</Typography>
               <Typography variant="h6">{dailyTotals.route_count}</Typography>
             </Box>
