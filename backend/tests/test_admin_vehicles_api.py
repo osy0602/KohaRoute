@@ -194,6 +194,66 @@ def test_deactivate_marks_vehicle_inactive_without_deleting(vehicle_client):
     assert rows.json()[0]["is_active"] is False
 
 
+def _add_vehicle(db, plate: str, is_active: bool) -> Vehicle:
+    """Insert a vehicle fixture row and return it."""
+    vehicle = Vehicle(
+        name="Fixture Van",
+        plate_number=plate,
+        capacity_kg=400,
+        capacity_litres=2000,
+        is_active=is_active,
+    )
+    db.add(vehicle)
+    db.commit()
+    return vehicle
+
+
+def test_reactivate_marks_inactive_vehicle_active_again(vehicle_client):
+    """Reactivation keeps the same record and plate and makes the vehicle active."""
+    db = vehicle_client["db"]
+    vehicle = _add_vehicle(db, "KOHA07", is_active=False)
+    response = vehicle_client["client"].patch(
+        f"/api/admin/vehicles/{vehicle.id}/reactivate",
+        headers=vehicle_client["admin"],
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == vehicle.id
+    assert body["plate_number"] == "KOHA07"
+    assert body["is_active"] is True
+    assert db.get(Vehicle, vehicle.id).is_active is True
+
+
+def test_reactivating_an_active_vehicle_is_harmless(vehicle_client):
+    """Repeating the action (for example a double click) leaves the vehicle active."""
+    vehicle = _add_vehicle(vehicle_client["db"], "KOHA08", is_active=True)
+    response = vehicle_client["client"].patch(
+        f"/api/admin/vehicles/{vehicle.id}/reactivate",
+        headers=vehicle_client["admin"],
+    )
+    assert response.status_code == 200
+    assert response.json()["is_active"] is True
+
+
+def test_reactivate_unknown_vehicle_returns_404(vehicle_client):
+    """A vehicle id that does not exist is reported as not found."""
+    response = vehicle_client["client"].patch(
+        "/api/admin/vehicles/9999/reactivate", headers=vehicle_client["admin"]
+    )
+    assert response.status_code == 404
+
+
+def test_reactivate_requires_admin(vehicle_client):
+    """Anonymous users and drivers cannot reactivate vehicles."""
+    vehicle = _add_vehicle(vehicle_client["db"], "KOHA09", is_active=False)
+    url = f"/api/admin/vehicles/{vehicle.id}/reactivate"
+    assert vehicle_client["client"].patch(url).status_code == 401
+    assert (
+        vehicle_client["client"].patch(url, headers=vehicle_client["driver"]).status_code == 403
+    )
+    assert vehicle_client["db"].get(Vehicle, vehicle.id).is_active is False
+
+
 def test_active_route_conflict_is_returned_as_http_409(vehicle_client, monkeypatch):
     """The API exposes the route-assignment guard as a conflict, not an internal error."""
     vehicle = Vehicle(

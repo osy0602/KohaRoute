@@ -15,6 +15,7 @@ from app.services.vehicle_service import (
     create_vehicle,
     deactivate_vehicle,
     list_vehicles,
+    reactivate_vehicle,
     update_vehicle,
 )
 
@@ -89,5 +90,17 @@ def deactivate_admin_vehicle(
     try:
         vehicle = deactivate_vehicle(db, vehicle_id)
     except (ValueError, VehicleInUseError, VehicleNotFoundError) as error:
+        raise _translate_error(error) from error
+    return VehicleOut.model_validate(vehicle)
+
+
+@router.patch("/{vehicle_id}/reactivate", response_model=VehicleOut)
+def reactivate_admin_vehicle(
+    vehicle_id: int, db: Annotated[Session, Depends(get_db)]
+) -> VehicleOut:
+    """Mark an inactive vehicle active so it can be used for future routes."""
+    try:
+        vehicle = reactivate_vehicle(db, vehicle_id)
+    except (ValueError, VehicleNotFoundError) as error:
         raise _translate_error(error) from error
     return VehicleOut.model_validate(vehicle)

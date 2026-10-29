@@ -25,6 +25,7 @@ import {
   createAdminVehicle,
   deactivateAdminVehicle,
   getAdminVehicles,
+  reactivateAdminVehicle,
   updateAdminVehicle,
 } from '../api/adminVehicles';
 import { cubicMetresToLitres, formatCubicMetres } from '../utils/volume';
@@ -123,6 +124,20 @@ export default function AdminVehiclesPage() {
       else await createAdminVehicle(payload);
       setDialogOpen(false);
       setNotice(editingVehicle ? 'Vehicle updated.' : 'Vehicle added.');
+      await loadVehicles();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function reactivateVehicle(vehicle) {
+    setIsSaving(true);
+    setError('');
+    try {
+      await reactivateAdminVehicle(vehicle.id);
+      setNotice(`${vehicle.name} is active again and can be used for routes.`);
       await loadVehicles();
     } catch (requestError) {
       setError(requestError.message);
@@ -230,13 +245,21 @@ export default function AdminVehiclesPage() {
                       <Button size="small" onClick={() => openEditDialog(vehicle)}>
                         Edit
                       </Button>
-                      {vehicle.is_active && (
+                      {vehicle.is_active ? (
                         <Button
                           size="small"
                           color="error"
                           onClick={() => setDeactivatingVehicle(vehicle)}
                         >
                           Deactivate
+                        </Button>
+                      ) : (
+                        <Button
+                          size="small"
+                          disabled={isSaving}
+                          onClick={() => reactivateVehicle(vehicle)}
+                        >
+                          Reactivate
                         </Button>
                       )}
                     </Stack>

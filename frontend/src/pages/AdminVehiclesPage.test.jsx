@@ -7,6 +7,7 @@ import {
   createAdminVehicle,
   deactivateAdminVehicle,
   getAdminVehicles,
+  reactivateAdminVehicle,
   updateAdminVehicle,
 } from '../api/adminVehicles';
 
@@ -17,6 +18,7 @@ vi.mock('../api/adminVehicles', () => ({
   createAdminVehicle: vi.fn(),
   deactivateAdminVehicle: vi.fn(),
   getAdminVehicles: vi.fn(),
+  reactivateAdminVehicle: vi.fn(),
   updateAdminVehicle: vi.fn(),
 }));
 
@@ -46,6 +48,7 @@ describe('AdminVehiclesPage', () => {
     createAdminVehicle.mockResolvedValue({ ...activeVehicle, id: 2 });
     updateAdminVehicle.mockResolvedValue({ ...activeVehicle, capacity_kg: 700 });
     deactivateAdminVehicle.mockResolvedValue({ ...activeVehicle, is_active: false });
+    reactivateAdminVehicle.mockResolvedValue(activeVehicle);
   });
 
   it('lists vehicle name, plate, capacities, and active status', async () => {
@@ -104,6 +107,28 @@ describe('AdminVehiclesPage', () => {
     const confirmDialog = screen.getByRole('dialog', { name: 'Deactivate vehicle?' });
     fireEvent.click(within(confirmDialog).getByRole('button', { name: 'Deactivate' }));
     await waitFor(() => expect(deactivateAdminVehicle).toHaveBeenCalledWith(1));
+  });
+
+  it('offers Reactivate only for inactive vehicles and refreshes the list', async () => {
+    const inactiveVehicle = { ...activeVehicle, is_active: false };
+    getAdminVehicles.mockResolvedValueOnce([inactiveVehicle]).mockResolvedValue([activeVehicle]);
+    renderVehicles();
+
+    expect(await screen.findByText('Inactive')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deactivate' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reactivate' }));
+
+    await waitFor(() => expect(reactivateAdminVehicle).toHaveBeenCalledWith(1));
+    expect(await screen.findByText(/Demo Van is active again/)).toBeInTheDocument();
+    expect(await screen.findByText('Active')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reactivate' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Deactivate' })).toBeInTheDocument();
+  });
+
+  it('does not offer Reactivate for an active vehicle', async () => {
+    renderVehicles();
+    expect(await screen.findByText('Demo Van')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reactivate' })).not.toBeInTheDocument();
   });
 
   it('shows capacity in m³ when editing and keeps the stored litres unchanged', async () => {

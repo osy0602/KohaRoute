@@ -29,7 +29,7 @@ on a map and mark each stop Completed or Missed.
 | Donor (no login) | Book a pickup: choose an open date, categories, size, address (autocomplete), up to the allowed number of JPG/PNG photos | `/book` |
 | Donor (no login) | Track a booking by its reference: status, pickup date, area only (no street address) | `/track` |
 | Admin | Review bookings; approve, reject (with reason) or reschedule; view photos and a map preview | `/admin` |
-| Admin | Add and edit vehicles; activate/deactivate (never delete) | `/admin/vehicles` |
+| Admin | Add and edit vehicles; reactivate/deactivate (never delete) | `/admin/vehicles` |
 | Admin | Pick a date, drivers and vehicles; generate optimised routes; view the map and daily totals | `/admin/routes` |
 | Driver | See only their own route for a day; next stop first; navigate with Google Maps; mark Completed or Missed (Missed needs a remark) | `/driver` |
 
