@@ -1,0 +1,77 @@
+{
+  "planned_by": "Seyoung Oh",
+  "method": "Planned by hand on Google Maps: bookings grouped by area, visiting order chosen by eye. No routing software.",
+  "routes": [
+    {
+      "driver": "Demo Driver 1",
+      "vehicle": "KOHA01",
+      "stops": ["KR-DEMO-05", "KR-DEMO-06", "KR-DEMO-01"]
+    },
+    {
+      "driver": "Demo Driver 2",
+      "vehicle": "KOHA02",
+      "stops": ["KR-DEMO-04", "KR-DEMO-03", "KR-DEMO-02"]
+    }
+  ],
+  "bookings_to_place": [
+    {
+      "reference": "KR-DEMO-01",
+      "address": "12 Sample Road, Henderson, Auckland",
+      "latitude": -36.8795,
+      "longitude": 174.634,
+      "map": "https://www.google.com/maps?q=-36.8795,174.634",
+      "kg": 30,
+      "litres": 120
+    },
+    {
+      "reference": "KR-DEMO-02",
+      "address": "34 Sample Street, Te Atatu, Auckland",
+      "latitude": -36.849,
+      "longitude": 174.657,
+      "map": "https://www.google.com/maps?q=-36.849,174.657",
+      "kg": 30,
+      "litres": 150
+    },
+    {
+      "reference": "KR-DEMO-03",
+      "address": "5 Sample Avenue, Glen Eden, Auckland",
+      "latitude": -36.908,
+      "longitude": 174.649,
+      "map": "https://www.google.com/maps?q=-36.908,174.649",
+      "kg": 15,
+      "litres": 60
+    },
+    {
+      "reference": "KR-DEMO-04",
+      "address": "78 Sample Lane, New Lynn, Auckland",
+      "latitude": -36.907,
+      "longitude": 174.686,
+      "map": "https://www.google.com/maps?q=-36.907,174.686",
+      "kg": 15,
+      "litres": 60
+    },
+    {
+      "reference": "KR-DEMO-05",
+      "address": "9 Sample Place, Kumeu, Auckland",
+      "latitude": -36.779,
+      "longitude": 174.569,
+      "map": "https://www.google.com/maps?q=-36.779,174.569",
+      "kg": 60,
+      "litres": 300
+    },
+    {
+      "reference": "KR-DEMO-06",
+      "address": "21 Sample Drive, Hobsonville, Auckland",
+      "latitude": -36.789,
+      "longitude": 174.652,
+      "map": "https://www.google.com/maps?q=-36.789,174.652",
+      "kg": 10,
+      "litres": 40
+    }
+  ],
+  "depot": {
+    "latitude": -36.815,
+    "longitude": 174.61,
+    "map": "https://www.google.com/maps?q=-36.815,174.61"
+  }
+}
