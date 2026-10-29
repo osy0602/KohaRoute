@@ -24,3 +24,7 @@ convention = "google"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+filterwarnings = [
+    "ignore:'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated",
+]
+

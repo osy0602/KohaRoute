@@ -53,7 +53,7 @@ DEFAULT_SETTINGS: dict[SettingKey, Any] = {
     # Coordinates are approximate for Westgate. Part 3 replaces them with one ORS lookup and
     # sets is_geocoded to true.
     SettingKey.DEPOT: {
-        "name": "Auckland Community Centre depot",
+        "name": "Te Manawa Community Centre depot",
         "address": "11 Kohuhu Lane, Westgate, Auckland",
         "latitude": -36.8150,
         "longitude": 174.6100,

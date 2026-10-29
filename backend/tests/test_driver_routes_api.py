@@ -387,9 +387,11 @@ def test_stop_includes_address_categories_donor_description_and_photos(driver_cl
     booking = db.get(Booking, driver_client["booking1_id"])
     booking.description = "Two boxes by the gate."
     booking.categories.append(Category(name="Household items", sort_order=1))
-    db.add(
+    # Attach through the relationship: the test shares one long-lived session with the API
+    # (expire_on_commit is off), so a Photo added by booking_id alone would never refresh the
+    # booking's already-loaded, empty photo list. Real requests each get a fresh session.
+    booking.photos.append(
         Photo(
-            booking_id=booking.id,
             stored_name="photo-one.png",
             content_type="image/png",
             size_bytes=4,

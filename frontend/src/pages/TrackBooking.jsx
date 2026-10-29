@@ -66,7 +66,7 @@ export default function TrackBooking() {
     <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
         <Typography variant="overline" color="primary.main">
-          Auckland Community Centre
+          Te Manawa Community Centre
         </Typography>
         <Link component={RouterLink} to="/book" underline="hover">
           Book a pickup

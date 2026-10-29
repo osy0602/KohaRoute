@@ -1,209 +1,417 @@
 # KohaRoute
 
-Pickup booking and route planning for Auckland Community Centre. Team Koha.
+Pickup booking and route planning for **Te Manawa Community Centre**. Built by Team Koha.
 
-This repository currently includes Parts 0-8: the foundation, seeded data/settings, staff login,
-donor pickup booking and tracking, Admin booking review, vehicle management, ORS route planning,
-and driver routes and pickup updates. Later features arrive one part at a time.
+Donors book a pickup of items online and track its progress with no account. Admin staff review
+bookings, manage vehicles and generate optimised pickup routes. Drivers follow their assigned route
+on a map and mark each stop Completed or Missed.
 
-## Folder layout
+## Contents
 
-```
-koharoute/
-  environment.yml        conda environment (KOHA-ROUTE, Python 3.11)
-  backend/
-    app/                 FastAPI code
-      models/            database tables (one file per table)
-      services/          business rules, booking, photo and ORS adapters
-      api/               HTTP routers
-      seed.py            `python -m app.seed` (logic) and seed_data.py (the data itself)
-      security.py        password hashing
-      config.py, database.py, timeutil.py
-    tests/               pytest tests
-    requirements*.txt    packages
-    pyproject.toml       Black, Ruff and pytest settings
-    .env.example         copy to .env for ORS key and local overrides
-  frontend/
-    src/api/             one small file per backend resource, plus a shared fetch wrapper
-    src/hooks/           reusable React logic (no screen markup)
-    src/pages/           one file per screen
-    src/theme.js         colours and type for the whole app
-  scripts/               comparison script for the Project Report (added in Part 10)
-  scripts/ors_optimization_spike.py  manual ORS max_tasks/geometry check
-```
+1. [Features](#1-features)
+2. [Technology](#2-technology)
+3. [Installation and configuration (step by step)](#3-installation-and-configuration-step-by-step)
+4. [Operating the system](#4-operating-the-system)
+5. [Testing and formatting](#5-testing-and-formatting)
+6. [Project files and their purpose](#6-project-files-and-their-purpose)
+7. [API summary](#7-api-summary)
+8. [Data model](#8-data-model)
+9. [Coding standards](#9-coding-standards)
+10. [Licence](#10-licence)
+11. [Credits](#12-credits)
 
-## One-time setup
+---
 
-You need conda and Node.js 20 or newer.
+## 1. Features
+
+| Role | What they can do | Page |
+| --- | --- | --- |
+| Donor (no login) | Book a pickup: choose an open date, categories, size, address (autocomplete), up to the allowed number of JPG/PNG photos | `/book` |
+| Donor (no login) | Track a booking by its reference: status, pickup date, area only (no street address) | `/track` |
+| Admin | Review bookings; approve, reject (with reason) or reschedule; view photos and a map preview | `/admin` |
+| Admin | Add and edit vehicles; activate/deactivate (never delete) | `/admin/vehicles` |
+| Admin | Pick a date, drivers and vehicles; generate optimised routes; view the map and daily totals | `/admin/routes` |
+| Driver | See only their own route for a day; next stop first; navigate with Google Maps; mark Completed or Missed (Missed needs a remark) | `/driver` |
+
+
+## 2. Technology
+
+- **Backend:** Python 3.11, FastAPI, SQLAlchemy 2, SQLite (WAL mode), Pydantic 2, httpx, bcrypt, Pillow.
+- **Frontend:** React 18, Vite 5, Material UI 6, React Router 6, Leaflet / React-Leaflet, `@mapbox/polyline`, Vitest.
+- **External service:** [OpenRouteService](https://openrouteservice.org) (ORS) for address search and route optimisation.
+- **Tooling:** conda, pytest, Ruff, Black, Prettier.
+
+## 3. Installation and configuration (step by step)
+
+### 3.1 Prerequisites
+
+- [conda](https://docs.conda.io/) (Miniconda or Anaconda)
+- Node.js 20 or newer (includes npm)
+- Git
+- A free ORS API key from <https://openrouteservice.org/dev/#/signup> (required for address search and route generation)
+
+### 3.2 Get the code
 
 ```bash
-# Backend
-conda env create -f environment.yml
+git clone <repository-url> KohaRoute
+cd KohaRoute
+```
+
+If you received a zip file instead, unzip it and `cd` into the `KohaRoute_B` folder.
+
+### 3.3 Backend setup
+
+```bash
+conda env create -f environment.yml      # creates the KOHA-ROUTE environment (Python 3.11)
 conda activate KOHA-ROUTE
 cd backend
 python -m pip install -r requirements-dev.txt
-
-# Frontend (in a second terminal)
-cd frontend
-npm install
 ```
 
-## Run it
+### 3.4 Configure the backend
+
+1. Copy the example settings file: `cp .env.example .env` (Windows: `copy .env.example .env`).
+2. Open `backend/.env` and set:
+
+| Variable | Required | Meaning |
+| --- | --- | --- |
+| `ORS_API_KEY` | Yes, for address search and routes | Your OpenRouteService key |
+| `KOHA_ENV` | No (default `development`) | Environment name. Anything other than `development` or `test` makes `JWT_SECRET_KEY` mandatory |
+| `JWT_SECRET_KEY` | Yes outside development | Token signing secret. Generate with `openssl rand -hex 32` |
+| `DATABASE_URL` | No | Default is the SQLite file `backend/koharoute.db` |
+| `CORS_ORIGINS` | No | Comma-separated browser origins allowed to call the API (default `http://localhost:5173`) |
+| `SEED_ADMIN_PASSWORD`, `SEED_DRIVER_PASSWORD` | No, but recommended | Passwords for the demo accounts (at least 10 characters). Built-in demo defaults exist in `app/config.py`; do not use them anywhere public |
+| `PHOTO_STORAGE_DIR` | No | Where uploaded photos are stored (default `backend/uploads/photos/`) |
+
+Real environment variables override values in `.env`. **Never commit `.env`** (it is git-ignored).
+
+### 3.5 Create and seed the database
+
+From `backend/` with `KOHA-ROUTE` active:
 
 ```bash
-# Terminal 1, from backend/ (environment KOHA-ROUTE active)
-uvicorn app.main:app --reload        # http://localhost:8000/api/health and /docs
-
-# Terminal 2, from frontend/
-npm run dev                          # http://localhost:5173
+python -m app.seed             # create tables and add anything missing (safe to repeat)
+python -m app.seed --reset     # wipe everything, then seed (you must type "yes")
 ```
-
-The public start page is the donor pickup booking form. Staff use `/login`.
-
-## Create the database and seed it
-
-From `backend/`, with the `KOHA-ROUTE` environment active:
-
-```bash
-python -m app.seed             # create tables, add anything missing (safe to repeat)
-python -m app.seed --reset     # wipe everything first, then seed (asks you to type "yes")
-```
-
-Running it twice is safe: the second run reports "already seeded" and changes nothing.
 
 | Seeded item | On re-run |
 | --- | --- |
-| Settings (opening days, window, size presets, depot, ...) | Rewritten from `app/seed_data.py`. This is how a rule is changed in the MVP. |
+| Settings (opening days, booking window, size presets, depot, ...) | Rewritten from `app/seed_data.py`. This is how a rule is changed in the MVP |
 | Closed dates, categories, vehicles, demo bookings | Added only if missing; never overwritten |
 | Users (1 Admin, 3 drivers) | Added only if missing; an existing account keeps its password |
 
-Demo logins: `admin@koharoute.test` and `driver1@koharoute.test` to `driver3@koharoute.test`.
-Their passwords come from `SEED_ADMIN_PASSWORD` and `SEED_DRIVER_PASSWORD` (see
-`backend/.env.example`; demo use only, at least 10 characters).
+Demo logins: `admin@koharoute.test`, and `driver1@koharoute.test` to `driver3@koharoute.test`, using
+the passwords from `SEED_ADMIN_PASSWORD` / `SEED_DRIVER_PASSWORD`.
 
 The demo data is 10 fictional bookings: six Approved on the next open day (160 kg and 730 L in
 total, a realistic day to plan), three Pending and one Rejected. They have no photos.
 
-## Test and format
+### 3.6 Frontend setup
+
+In a second terminal:
 
 ```bash
-# backend/
+cd frontend
+npm install
+```
+
+### 3.7 Start the system
+
+```bash
+# Terminal 1, from backend/ (KOHA-ROUTE active)
+uvicorn app.main:app --reload        # API: http://localhost:8000/api/health, docs: /docs
+
+# Terminal 2, from frontend/
+npm run dev                          # App: http://localhost:5173
+```
+
+Vite proxies `/api` requests to port 8000, so start the backend first. Open
+<http://localhost:5173>: the public start page is the donor booking form. Staff use `/login`.
+
+### 3.8 Production build (optional)
+
+```bash
+cd frontend
+npm run build                        # outputs frontend/dist/
+```
+
+Serve `frontend/dist/` with any static web server, run the API with a real `JWT_SECRET_KEY`, set
+`KOHA_ENV=production`, and put the site's origin in `CORS_ORIGINS`.
+
+### 3.9 Check that it works
+
+- `http://localhost:8000/api/health` returns a healthy status.
+- `http://localhost:5173/book` shows the booking form with open dates.
+- Log in at `/login` as the demo Admin; you land on the booking review page.
+
+## 4. Operating the system
+
+**Donor: book a pickup (`/book`)**
+1. Choose an available pickup date, item categories and a size, add an optional description and photos (JPG/PNG).
+2. Type the pickup address and choose one of the suggestions (Auckland addresses only).
+3. Enter name and contact number, accept the privacy notice, and submit.
+4. Keep the booking reference shown on the confirmation page.
+
+**Donor: track a booking (`/track`)** Enter the reference. You see the status and pickup date. Rejected
+bookings show the reason; Missed bookings say the centre will contact you to reschedule.
+
+**Admin: review bookings (`/admin`)**
+1. Log in. The list shows Pending bookings; filter by status or pickup date.
+2. Open a booking for contact details, description, photos, estimated load and a map preview.
+3. Approve, or Reject with a reason. Approved or Missed bookings can be rescheduled to an open date.
+
+**Admin: manage vehicles (`/admin/vehicles`)** Add or edit name, plate (6 letters/digits, stored in
+upper case) and capacity (kg, m³). Deactivate instead of deleting. A vehicle with a Scheduled stop on a
+Planned or In-progress route cannot be deactivated.
+
+**Admin: plan routes (`/admin/routes`)**
+1. Pick the date, then tick the active drivers and vehicles to use.
+2. Press **Generate**. Approved bookings are sent to ORS once; the stop order, geometry, distance,
+   duration and planned totals are saved. Bookings that do not fit stay Approved (unassigned).
+3. Review the map and daily totals. Regenerating replaces an untouched plan; it is blocked once any
+   stop is Completed or Missed.
+
+**Driver: run a route (`/driver`)** Log in as a driver. Your route for the NZ-today date is shown with
+the next Scheduled stop first. Open a stop for contact details, categories, description and photos;
+use the navigation link; press Completed or Missed (a remark is required for Missed). Completed and
+Missed stops cannot be changed by the driver; an Admin must reschedule Missed bookings.
+
+**Maintenance**
+- Change a business rule (opening days, size presets, depot): edit `backend/app/seed_data.py`, then re-run `python -m app.seed`.
+- After a model change in development: `python -m app.seed --reset`.
+- Manual ORS check: from `backend/`, run `python ../scripts/ors_optimization_spike.py`.
+
+## 5. Testing and formatting
+
+```bash
+# backend/ (KOHA-ROUTE active)
 python -m pytest
-python -m ruff check .
-python -m black --check .            # drop --check to fix formatting
+python -m black --check .            # drop --check to reformat
 
 # frontend/
 npm test
 npm run format:check                 # use `npm run format` to fix
 ```
 
-## Configuration
+Backend tests use an in-memory SQLite database and a fake route planner, so they need no ORS key or network.
 
-Settings come from environment variables or `backend/.env` (see `.env.example`):
-`KOHA_ENV`, `DATABASE_URL` (default `backend/koharoute.db`), `CORS_ORIGINS`, `ORS_API_KEY`,
-and `PHOTO_STORAGE_DIR`. Set a unique `JWT_SECRET_KEY` outside local development. Uploaded
-photos default to `backend/uploads/photos/` and are not served as public static files.
-Business rules such as opening days and size presets are stored in the database from Part 1,
-not in configuration.
+## 6. Project files and their purpose
 
-## Donor booking (Part 3)
+### 6.1 Repository root
 
-The public form loads open pickup dates, active categories, size presets, and upload limits from
-`GET /api/bookings/options`. Address autocomplete uses `GET /api/bookings/address-suggestions`
-and requires an `ORS_API_KEY`; selections are signed and expire after ten minutes. Submit a
-multipart form to `POST /api/bookings`. The backend revalidates all fields, calculates estimates,
-decodes and re-encodes JPG/PNG photos to remove metadata, and stores photos under random names.
-The confirmation contains a random reference; tracking arrives in Part 4. If address search is
-unavailable, configure a valid ORS key and retry.
-
-## Track a booking (Part 4)
-
-Donors can use `/track` or `GET /api/bookings/track/{reference}` to see the booking status and
-pickup date. The response includes only the pickup area, not the street address, donor name,
-contact number, or photo details. Rejected bookings include the Admin's reason; missed bookings
-show that the centre will contact the donor to reschedule. Unknown references return
-`No booking found`.
-
-## Admin booking review (Part 5)
-
-Admins review bookings at `/admin`. The list defaults to Pending and supports status and pickup-date
-filters. Admins can open details, including contact, description, photos, estimated load, and a map
-preview. Pending bookings can be approved or rejected with a reason; Approved or Missed bookings
-can be rescheduled to an open date. Review, transition, and photo endpoints are protected by the
-server-side Admin role guard. Photos are served from private storage only through the authenticated
-Admin photo endpoint.
-
-## Vehicle management (Part 6)
-
-Admins manage vehicles at `/admin/vehicles`. The list shows name, plate, capacity in kg and m³,
-and Active/Inactive status. Vehicles can be added or edited, but not deleted; deactivation is a
-soft status change. Plate numbers are normalized to uppercase and limited to six alphanumeric
-characters, and capacities must be positive whole numbers. Vehicle endpoints require the Admin
-role. A vehicle with a Scheduled stop on a Planned or In progress route cannot be deactivated.
-
-## Route planning (Part 7)
-
-Admins plan a date at `/admin/routes`. Select active drivers and vehicles, then Generate. The
-backend sends Approved bookings as ORS jobs with saved `[longitude, latitude]` coordinates,
-estimated whole-kilogram weights, and litre volumes. Each selected vehicle starts and ends at the
-depot from settings and receives a fair-share `max_tasks` limit. ORS is called once; the returned
-stop order, encoded geometry, distance, duration, and planned estimate totals are stored. The map
-reads only the saved route data and never calls ORS. Unassigned bookings stay Approved. Replacing
-an untouched plan calls ORS first and then replaces it in one database transaction; replacement
-is blocked if a stop is Completed or Missed. An ORS API key is required. The manual spike can be
-run from `backend/` with `python ../scripts/ors_optimization_spike.py`.
-
-## Where each coding standard is demonstrated
-
-| Standard | Examples across the current parts |
+| File / folder | Purpose |
 | --- | --- |
-| Modularity and encapsulation | `config.py` (settings only), `database.py` (all SQLite details), `timeutil.py` (the only place "today" is decided), `api/health.py` (one router per feature); `settings_service` is the only code that reads setting rows; `calendar_service` is pure functions with no database; frontend split into `api/`, `hooks/`, `pages/` |
-| Performance | One cached config read (`lru_cache`); one session per request, always closed; SQLite write-ahead logging; shared in-memory connection in tests; `AbortController` cancels stale requests; indexes on booking status, pickup date, reference and photo booking; `lazy="selectin"` avoids one query per booking; all settings read in one query; seed runs in one transaction |
-| Commenting and documentation | Google-style docstrings on every public function (enforced by Ruff rule set `D`); comments explain why (for example, why `date.today()` is banned); JSDoc on the frontend helpers; the seed data cites its source and date; this README |
-| Indentation and formatting | Black and Ruff (4 spaces, 100 columns) via `pyproject.toml`; Prettier (2 spaces, single quotes) via `.prettierrc.json`; `.editorconfig` for every editor |
-| Naming conventions | `snake_case` functions and files, `PascalCase` classes and React components, `UPPER_SNAKE_CASE` constants, `camelCase` JavaScript; names follow the spec vocabulary |
+| `README.md` | This guide |
+| `LICENSE` | Licence text (see section 10) |
+| `environment.yml` | Conda environment `KOHA-ROUTE` (Python 3.11 + pip) |
+| `.gitignore` | Keeps secrets (`.env`), databases, uploads, caches, `node_modules`, builds and zips out of git |
+| `.editorconfig` | Shared editor settings (indentation, line endings) |
+| `.vscode/settings.json` | VS Code: use conda for Python environments |
+| `backend/` | FastAPI server, database and tests |
+| `frontend/` | React web app |
+| `scripts/` | Developer utilities |
+| `docs/` | Reserved for project documents (currently empty) |
 
-Part 3 keeps booking rules, address search, photo processing, persistence, API schemas, and UI in
-separate modules. ORS uses one shared async HTTP client, bounded five-minute query caching, and
-per-client rate limiting. Booking validation and image preparation happen before persistence;
-failed database writes roll back and remove any already-written photo files.
+### 6.2 `backend/` (configuration and data)
 
-## Data model (Part 1)
+| File | Purpose |
+| --- | --- |
+| `requirements.txt` / `requirements-dev.txt` | Runtime packages / runtime plus pytest, Ruff, Black |
+| `pyproject.toml` | Black, Ruff and pytest settings |
+| `.env.example` | Template for `.env` (keys, database, CORS, seed passwords) |
+| `.env` | Your local secrets (not committed) |
+| `koharoute.db` (+ `-wal`, `-shm`) | SQLite database created by the seed script (not committed) |
+| `uploads/photos/` | Private, randomly named donor photos (not committed, never served publicly) |
+
+### 6.3 `backend/app/` (application code)
+
+| File | Purpose |
+| --- | --- |
+| `main.py` | Builds the FastAPI app: CORS, shared HTTP clients, registers every router |
+| `config.py` | Environment-based deployment settings (database, CORS, ORS key, photo folder) |
+| `database.py` | SQLAlchemy engine, sessions, SQLite settings, table creation |
+| `security.py` | bcrypt password hashing; signed access tokens (JWT) |
+| `timeutil.py` | The only place "today" is decided (New Zealand time) |
+| `seed.py` | `python -m app.seed` logic: tables, settings, holidays, users, vehicles, demo bookings |
+| `seed_data.py` | The seed data itself (settings, size presets, depot, NZ holidays 2026–27, categories, demo records) |
+
+**`models/`** (one database table per file)
+
+| File | Purpose |
+| --- | --- |
+| `booking.py` | Donor bookings and booking-category links |
+| `category.py` | Item categories on the booking form |
+| `closed_date.py` | Dates the centre does not collect (public holidays) |
+| `photo.py` | Photo metadata (file lives on disk) |
+| `route.py` / `route_stop.py` | Saved route plans per driver/vehicle/date, and their ordered stops |
+| `setting.py` | Business rules as key/value rows |
+| `user.py` | Admin and driver accounts |
+| `vehicle.py` | Vehicles and capacities |
+| `mixins.py`, `types.py` | Shared columns and custom column types |
+| `__init__.py` | Registers all tables |
+
+**`schemas/`** (request and response shapes)
+
+| File | Purpose |
+| --- | --- |
+| `auth.py` | Login request/response |
+| `bookings.py` | Donor booking, options, tracking |
+| `admin_bookings.py` | Admin booking list/detail/actions |
+| `vehicles.py` | Vehicle create/update/output |
+| `routes.py` | Route planning options, generation and saved routes |
+| `driver_routes.py` | Driver route and stop updates |
+
+**`api/`** (HTTP endpoints; routers only translate HTTP to service calls)
+
+| File | Purpose |
+| --- | --- |
+| `health.py` | `/api/health` status check |
+| `auth.py` | Login and current-user endpoints |
+| `deps.py` | Current-user and role-guard dependencies (Admin / driver) |
+| `bookings.py` | Public options, address suggestions, booking creation and tracking |
+| `admin_bookings.py` | Admin review, photos, approve / reject / reschedule |
+| `admin_vehicles.py` | Admin vehicle management |
+| `admin_routes.py` | Route options, totals, saved routes, generate |
+| `driver_routes.py` | Driver routes, private photos, stop updates |
+
+**`services/`** (business rules)
+
+| File | Purpose |
+| --- | --- |
+| `auth_service.py` | Find user and check password |
+| `login_throttle.py` | Limits repeated failed logins |
+| `session_policy.py` | Session length from settings |
+| `settings_service.py` | Reads/writes the business settings |
+| `calendar_service.py` | Open-day rules (pure functions) |
+| `booking_rules.py` | Booking validation and weight/volume estimates |
+| `booking_service.py` | Creates a booking and its photos in one transaction |
+| `booking_tracking_service.py` | Privacy-limited tracking lookup |
+| `photo_service.py` | Validates photos and re-encodes them to strip metadata |
+| `geocoding_service.py` | ORS address search with caching, rate limiting and signed selections |
+| `admin_booking_service.py` | Admin review queries and status transitions |
+| `vehicle_service.py` | Vehicle rules and validation |
+| `route_planner.py` | ORS Optimization adapter plus a deterministic fake for tests |
+| `route_generation_service.py` | Prepares jobs, calls the planner, saves/replaces routes |
+| `driver_route_service.py` | Driver-only route reads and stop updates |
+
+### 6.4 `backend/tests/` (pytest)
+
+`conftest.py` provides shared fixtures. Test modules cover: `test_auth_api`, `test_auth_tokens`,
+`test_security`, `test_login_throttle`, `test_session_policy` (login and sessions);
+`test_booking_options_api`, `test_booking_rules`, `test_booking_tracking_api`, `test_photo_service`,
+`test_geocoding_service` (donor booking); `test_admin_bookings_api`, `test_admin_vehicles_api`,
+`test_driver_routes_api`, `test_route_stops_migration` (staff features and routes);
+`test_models`, `test_database`, `test_seed`, `test_seed_data`, `test_settings_service`,
+`test_calendar_service`, `test_timeutil`, `test_config`, `test_health` (foundation).
+
+### 6.5 `frontend/`
+
+| File | Purpose |
+| --- | --- |
+| `index.html` | Page shell; loads fonts and `/src/main.jsx` |
+| `package.json` / `package-lock.json` | Dependencies and npm scripts (`dev`, `build`, `test`, `format`) |
+| `vite.config.js` | Dev server on 5173, `/api` proxy to port 8000, Vitest (jsdom) |
+| `.prettierrc.json` | Prettier rules |
+| `dist/` | Build output from `npm run build` (generated) |
+
+**`frontend/src/`**
+
+| File | Purpose |
+| --- | --- |
+| `main.jsx` | App entry: theme, router, auth provider, public routes |
+| `theme.js` | Dark theme, brand colours, status and route colours |
+| `routes/staffRoutes.jsx` | Login and role-protected Admin/driver routes |
+| `auth/AuthContext.jsx`, `tokenStorage.js`, `roleHome.js`, `RequireRole.jsx` | Login state, token storage, role home page, route guard |
+| `api/http.js` | Shared fetch wrapper (auth header, errors) |
+| `api/adminBookings.js`, `adminVehicles.js`, `adminRoutes.js`, `driverRoutes.js`, `health.js` | One small client per backend resource |
+| `hooks/usePolling.js` | Repeated refresh of live data |
+| `hooks/useNzToday.js` | Today's date in New Zealand time |
+| `utils/volume.js` | Litres to m³ formatting |
+| `pages/BookPickup.jsx` | Donor booking form |
+| `pages/TrackBooking.jsx` | Donor tracking page |
+| `pages/LoginPage.jsx` | Staff login |
+| `pages/AdminBookingsPage.jsx` | Admin booking review |
+| `pages/AdminVehiclesPage.jsx` | Vehicle management |
+| `pages/AdminRoutesPage.jsx` | Route planning, map and totals |
+| `pages/DriverRoutePage.jsx` | Driver route, stops and updates |
+| `pages/StaffHomePlaceholder.jsx` | Placeholder staff home (not routed) |
+| `components/ScreenBackdrop.jsx` | Decorative page background |
+| `*.test.jsx` / `*.test.js` | Vitest tests beside the code they test |
+
+
+## 7. API summary
+
+Interactive documentation is at <http://localhost:8000/docs> when the backend runs.
+
+| Area | Endpoints | Access |
+| --- | --- | --- |
+| Health | `GET /api/health` | Public |
+| Auth | `POST /api/auth/login`, `GET /api/auth/me` | Public / signed in |
+| Donor | `GET /api/bookings/options`, `GET /api/bookings/address-suggestions`, `POST /api/bookings`, `GET /api/bookings/track/{reference}` | Public |
+| Admin bookings | `GET /api/admin/bookings`, `GET /{id}`, `GET /{id}/photos/{photo_id}`, `POST /{id}/approve`, `/reject`, `/reschedule` | Admin |
+| Admin vehicles | `GET/POST /api/admin/vehicles`, `PUT /{id}`, `PATCH /{id}/deactivate` | Admin |
+| Admin routes | `GET /api/admin/routes/options`, `GET /api/admin/routes`, `GET /totals`, `POST /generate` | Admin |
+| Driver | `GET /api/driver/routes`, `PATCH /{route_id}/stops/{booking_id}`, `GET /{route_id}/stops/{booking_id}/photos/{photo_id}` | Driver (own routes only) |
+
+## 8. Data model
 
 | Table | Holds |
 | --- | --- |
 | `settings` | Business rules as key/value rows (JSON values) |
 | `closed_dates` | NZ public holidays that fall on weekdays, 2026 and 2027 |
 | `categories` | Item categories on the booking form |
-| `users` | Admin and drivers (role is checked by the database) |
+| `users` | Admin and drivers (role checked by the database) |
 | `vehicles` | Capacity in whole kg and whole litres |
-| `bookings` | Donor requests, with estimated kg and litres and one of the six statuses |
+| `bookings` | Donor requests, estimated kg and litres, one of the six statuses |
 | `booking_categories` | Which categories a booking has |
-| `photos` | Photo metadata (random stored name; the file lives on disk) |
-| `routes` | Saved driver/vehicle plans, geometry, distance/duration and planned estimates |
+| `photos` | Photo metadata (random stored name; file on disk) |
+| `routes` | Saved driver/vehicle plans, geometry, distance/duration, planned estimates |
 | `route_stops` | ORS-ordered booking stops and lifecycle status |
 
-## Driver routes and pickup updates (Part 8)
+Security and privacy notes: staff routes are protected server-side by role; photos are re-encoded to
+remove metadata and are served only through authenticated endpoints; tracking never reveals the
+street address, name, phone or photos.
 
-Drivers open `/driver` to see only their assigned route for the selected day (NZ today by default),
-with the next Scheduled stop first. Stop details include donor contact, categories, description,
-photos, and a Google Maps navigation link. The route map uses the geometry saved in Part 7 and
-does not call ORS. Drivers can mark a Scheduled stop Completed or Missed; Missed requires a remark.
-The backend records the new stop/booking status, timestamp, remark, and driver, and prevents a
-driver from reading or updating another driver's route. Completed and Missed stops cannot be
-changed by a driver; Missed bookings must be rescheduled by an Admin.
+## 9. Coding standards
 
-## Holiday data
+| Standard | Where it is shown |
+| --- | --- |
+| Modularity and encapsulation | `config.py` (settings only), `database.py` (all SQLite details), `timeutil.py` (the only place "today" is decided); routers call services; `settings_service` is the only reader of setting rows; frontend split into `api/`, `hooks/`, `pages/` |
+| Performance | Cached config read, one session per request, SQLite WAL, cancelled stale requests (`AbortController`), database indexes, `selectin` loading, one-query settings read, single-transaction seed, ORS client reuse with caching and rate limiting |
+| Commenting and documentation | Google-style docstrings enforced by Ruff rule set `D`; comments explain why; JSDoc on frontend helpers; this README |
+| Indentation and formatting | Black and Ruff (4 spaces, 100 columns); Prettier (2 spaces, single quotes); `.editorconfig` |
+| Naming conventions | `snake_case` Python, `PascalCase` classes/components, `UPPER_SNAKE_CASE` constants, `camelCase` JavaScript |
 
-Closed dates come from the Employment New Zealand page on public holidays and anniversary
-dates (checked 15 Oct 2026). A holiday that falls on a weekend is listed on the Monday or
-Tuesday it is observed. That page warns that regional anniversary dates may contain errors, so
-confirm Auckland Anniversary Day (26 Jan 2026 and 1 Feb 2027) with the client before release.
+## 10. Licence
 
-## Known limits
+KohaRoute is released under the **MIT Licence**. The full text is in the `LICENSE` file. In short:
+you may use, copy, modify, merge, publish, distribute and sell the software, provided the copyright
+notice and licence text are kept in all copies. The software is provided "as is", without warranty
+of any kind, and the authors are not liable for any claim or damages arising from its use.
 
-- The Admin operational map and weight/volume totals are not built yet.
-- The size presets, vehicle capacities, categories and depot coordinates are placeholders
-  awaiting client confirmation. The depot coordinates are approximate pending a later ORS lookup.
-- There is no migration tool: the schema is created from the models. After a model change in
-  development, run `python -m app.seed --reset`.
+Third-party components keep their own licences (FastAPI, SQLAlchemy, React, Material UI, Leaflet and
+others). Map and address data come from OpenRouteService and OpenStreetMap contributors and are subject
+to their terms and attribution requirements. Public holiday dates are taken from Employment New Zealand.
+
+
+**Security reminders**
+1. Demo accounts use built-in default passwords unless `SEED_*_PASSWORD` is set, and a development-only JWT secret is used when `KOHA_ENV` is `development`. Change both before any public deployment.
+2. A local `.env`, database and uploaded photos can exist in a working copy. They are git-ignored; do not share them or include them in a zip.
+
+## 11. Credits
+
+**Developers (Team Koha)**
+
+| Name | GitHub |
+| --- | --- |
+| Seyoung Oh | osy0602 |
+| Chaw Theingi | chawtg |
+| keensalino14 | keensalino14 |
+| banggawandaniel-blip | banggawandaniel-blip |
+
+**Client:** Te Manawa Community Centre.
+
+**Acknowledgements:** [OpenRouteService](https://openrouteservice.org) and
+[OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (address search, routing, map data);
+[Employment New Zealand](https://www.employment.govt.nz/leave-and-holidays/public-holidays/) (public holiday dates);
+

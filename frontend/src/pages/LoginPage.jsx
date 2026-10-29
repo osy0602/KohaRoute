@@ -51,7 +51,7 @@ export default function LoginPage() {
         Staff log in
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        KohaRoute for Auckland Community Centre admins and drivers.
+        KohaRoute for Te Manawa Community Centre admins and drivers.
       </Typography>
 
       <Box component="form" noValidate onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2 }}>

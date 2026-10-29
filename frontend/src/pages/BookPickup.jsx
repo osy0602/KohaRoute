@@ -23,7 +23,7 @@ import { apiRequest } from '../api/http';
 import { formatVolumeM3 } from '../utils/volume';
 
 const PRIVACY_NOTICE =
-  'We use your name, contact number, address and photos only to arrange and complete this pickup. Only Auckland Community Centre staff and the driver collecting your items can see them, and they are not shared or used for anything else.';
+  'We use your name, contact number, address and photos only to arrange and complete this pickup. Only Te Manawa Community Centre staff and the driver collecting your items can see them, and they are not shared or used for anything else.';
 
 function formatDate(value) {
   return new Intl.DateTimeFormat('en-NZ', {
@@ -231,9 +231,32 @@ export default function BookPickup() {
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="overline" color="primary.main">Auckland Community Centre</Typography>
-        <Stack direction="row" spacing={2}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        spacing={2}
+        sx={{ mb: 4 }}
+      >
+        <Box>
+          <Typography
+            component="p"
+            sx={{
+              fontFamily: '"Bricolage Grotesque", "Public Sans", system-ui, sans-serif',
+              fontWeight: 700,
+              // Scales with the screen so the name and both links always share one line.
+              fontSize: 'clamp(1.15rem, 3.2vw, 2.1rem)',
+              whiteSpace: 'nowrap',
+              lineHeight: 1.1,
+              letterSpacing: '-0.02em',
+              color: 'primary.dark',
+            }}
+          >
+            Te Manawa Community Centre
+          </Typography>
+          <Box sx={{ mt: 1, width: 72, height: 5, borderRadius: 3, bgcolor: 'warning.main' }} />
+        </Box>
+        <Stack direction="row" spacing={3} sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
           <Link component={RouterLink} to="/track" underline="hover">Track a booking</Link>
           <Link component={RouterLink} to="/login" underline="hover">Staff login</Link>
         </Stack>

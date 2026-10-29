@@ -253,6 +253,7 @@ export default function AdminVehiclesPage() {
           <Box
             component="form"
             id="vehicle-form"
+            noValidate
             onSubmit={submitVehicle}
             sx={{ display: 'grid', gap: 2, pt: 1 }}
           >
