@@ -51,3 +51,6 @@ Desktop.ini
 
 # Packaged deliverables
 *.zip
+
+#comparison output files
+comparison_output/

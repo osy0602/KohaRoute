@@ -18,7 +18,7 @@ on a map and mark each stop Completed or Missed.
 8. [Data model](#8-data-model)
 9. [Coding standards](#9-coding-standards)
 10. [Licence](#10-licence)
-11. [Credits](#12-credits)
+11. [Credits](#11-credits)
 
 ---
 
@@ -180,6 +180,7 @@ Missed stops cannot be changed by the driver; an Admin must reschedule Missed bo
 - Change a business rule (opening days, size presets, depot): edit `backend/app/seed_data.py`, then re-run `python -m app.seed`.
 - After a model change in development: `python -m app.seed --reset`.
 - Manual ORS check: from `backend/`, run `python ../scripts/ors_optimization_spike.py`.
+- Compare a manual plan with the KohaRoute plan (report section 12): generate routes for a date first, then from the repo root run `python scripts/compare_routes.py --date YYYY-MM-DD --manual scripts/manual_plan.json`. Add `--write-template` instead of `--manual` to create an empty plan. Results are saved in `comparison_output/`.
 
 ## 5. Testing and formatting
 
@@ -209,7 +210,7 @@ Backend tests use an in-memory SQLite database and a fake route planner, so they
 | `.vscode/settings.json` | VS Code: use conda for Python environments |
 | `backend/` | FastAPI server, database and tests |
 | `frontend/` | React web app |
-| `scripts/` | Developer utilities |
+| `scripts/` | Developer utilities: ORS check (`ors_optimization_spike.py`) and route comparison for report section 12 (`compare_routes.py`, `manual_plan.json`) |
 | `docs/` | Reserved for project documents (currently empty) |
 
 ### 6.2 `backend/` (configuration and data)
