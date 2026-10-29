@@ -164,3 +164,18 @@ def deactivate_vehicle(db: Session, vehicle_id: int) -> Vehicle:
     db.commit()
     db.refresh(vehicle)
     return vehicle
+
+
+def reactivate_vehicle(db: Session, vehicle_id: int) -> Vehicle:
+    """Make an inactive vehicle available for route planning again.
+
+    No route check is needed: the vehicle is not on any Planned or In progress route (that is
+    what allowed it to be deactivated) and its plate stays unique across active and inactive
+    vehicles. Reactivating a vehicle that is already active is harmless and returns it unchanged.
+    """
+    vehicle = get_vehicle(db, vehicle_id)
+    if not vehicle.is_active:
+        vehicle.is_active = True
+        db.commit()
+        db.refresh(vehicle)
+    return vehicle

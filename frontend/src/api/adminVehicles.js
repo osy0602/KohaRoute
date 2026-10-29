@@ -19,3 +19,8 @@ export function updateAdminVehicle(vehicleId, vehicle) {
 export function deactivateAdminVehicle(vehicleId) {
   return apiRequest(`/api/admin/vehicles/${vehicleId}/deactivate`, { method: 'PATCH' });
 }
+
+/** Make an inactive vehicle available for future routes again. */
+export function reactivateAdminVehicle(vehicleId) {
+  return apiRequest(`/api/admin/vehicles/${vehicleId}/reactivate`, { method: 'PATCH' });
+}
